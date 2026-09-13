@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   Target, Calendar, Brain, FileText,
   Home, Settings, Bell, User,
-  ChevronRight, Activity, Zap
+  ChevronRight, Activity, Zap, Sparkles
 } from 'lucide-react';
 import { TacticalDashboard } from './TacticalDashboard';
 import { TacticalTimeline } from './TacticalTimeline';
@@ -13,6 +13,7 @@ import { TacticalMasteryGrid } from './TacticalMasteryGrid';
 import { TacticalYamlImport } from './TacticalYamlImport';
 import { TacticalKnowledgeBase } from './TacticalKnowledgeBase';
 import { TacticalCalendar } from './TacticalCalendar';
+import { TutorialModal } from './TutorialModal';
 
 type Tab = 'dashboard' | 'timeline' | 'mastery' | 'import' | 'knowledge';
 
@@ -35,6 +36,15 @@ export function TacticalOverrunApp() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [currentTime, setCurrentTime] = useState(new Date());
   const [notifications, setNotifications] = useState(3);
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
+
+  useEffect(() => {
+    // Open tutorial automatically for first time visitors
+    const seen = localStorage.getItem('overrun_tutorial_seen');
+    if (!seen) {
+      setIsTutorialOpen(true);
+    }
+  }, []);
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -115,6 +125,15 @@ export function TacticalOverrunApp() {
 
             {/* Right Actions - Responsive */}
             <div className="flex items-center gap-2 md:gap-4">
+              {/* Tutorial Button */}
+              <button
+                onClick={() => setIsTutorialOpen(true)}
+                className="px-2.5 py-1.5 md:px-3.5 md:py-1.5 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 text-xs font-semibold transition-all flex items-center gap-1.5 shadow-sm"
+              >
+                <Sparkles className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Tutorial</span>
+              </button>
+
               {/* Notifications - Hidden on smallest screens */}
               <button className="relative p-1.5 md:p-2 rounded-lg hover:bg-tactical-deep/50 transition-all hidden sm:block">
                 <Bell className="w-4 h-4 md:w-5 md:h-5 text-tactical-muted" />
@@ -229,6 +248,13 @@ export function TacticalOverrunApp() {
           <Zap className="w-6 h-6 text-white" />
         </button>
       </div>
+
+      {/* First-Timers Onboarding Tutorial Modal */}
+      <TutorialModal
+        isOpen={isTutorialOpen}
+        onClose={() => setIsTutorialOpen(false)}
+        onNavigateTab={(tab) => setActiveTab(tab as Tab)}
+      />
     </div>
   );
 }

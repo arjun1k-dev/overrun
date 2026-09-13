@@ -60,6 +60,6 @@ prisma/db/*.db
 prisma/db/*.sqlite*
 prisma/db/*.sqlite-journal
 .zscripts/
-knowledge/
+/knowledge/
 example/
 examples/

@@ -1,81 +1,49 @@
 import { NextResponse } from 'next/server';
 
 export const dynamic = "force-static";
-import fs from 'fs';
-import path from 'path';
-import { parseYaml } from '@/engine/yaml-parser';
 
-function scanKnowledgeDirectory(dir: string, baseDir: string, results: any[] = []) {
-  try {
-    if (!fs.existsSync(dir)) return results;
-    const entries = fs.readdirSync(dir, { withFileTypes: true });
-
-    for (const entry of entries) {
-      // Ignore system hidden directories, but allow .state directory
-      if (entry.name === '.git' || entry.name === '.obsidian' || entry.name === 'node_modules') {
-        continue;
-      }
-
-      const fullPath = path.join(dir, entry.name);
-      const relativePath = path.relative(baseDir, fullPath);
-
-      if (entry.isDirectory()) {
-        scanKnowledgeDirectory(fullPath, baseDir, results);
-      } else if (
-        entry.isFile() &&
-        (entry.name.endsWith('.yaml') || entry.name.endsWith('.yml') || entry.name.endsWith('.md'))
-      ) {
-        try {
-          const content = fs.readFileSync(fullPath, 'utf8');
-          const parsed = parseYaml(content);
-
-          if (parsed.success) {
-            results.push({
-              file: entry.name,
-              path: fullPath,
-              relativePath,
-              type: parsed.type,
-              data: parsed.data,
-              source: parsed.source,
-            });
-          } else if (entry.name.endsWith('.md')) {
-            // Extract title for markdown notes that don't have an explicit schema type
-            const titleMatch = content.match(/^#\s+(.+)$/m);
-            const title = titleMatch ? titleMatch[1].trim() : entry.name.replace(/\.md$/, '');
-            results.push({
-              file: entry.name,
-              path: fullPath,
-              relativePath,
-              type: 'markdown_note',
-              data: {
-                title,
-                contentSnippet: content.slice(0, 300),
-              },
-              source: 'markdown',
-            });
-          }
-        } catch {
-          // ignore invalid files
-        }
-      }
-    }
-  } catch (err: any) {
-    console.error('Error scanning Knowledge dir:', err);
-  }
-  return results;
-}
-
+// Return generic tutorial records so public static deployments remain 100% private
+// and never expose local filesystem notes, while providing an active, non-blank tutorial screen.
 export async function GET() {
-  try {
-    const knowledgeDir = path.resolve(process.cwd(), 'knowledge');
-    const records = scanKnowledgeDirectory(knowledgeDir, knowledgeDir);
+  const tutorialRecords = [
+    {
+      file: 'Welcome_to_OVERRUN.md',
+      path: '/tutorial/Welcome_to_OVERRUN.md',
+      relativePath: 'tutorial/Welcome_to_OVERRUN.md',
+      type: 'markdown_note',
+      data: {
+        title: 'Welcome to OVERRUN Tactical Knowledge Base',
+        contentSnippet: 'OVERRUN is your local command center for tactical scheduling, knowledge curation, and time banking. All your personal notes stay 100% private on your device.',
+      },
+      source: 'tutorial',
+    },
+    {
+      file: 'Tutorial_Local_Knowledge_Vault.md',
+      path: '/tutorial/Tutorial_Local_Knowledge_Vault.md',
+      relativePath: 'tutorial/Tutorial_Local_Knowledge_Vault.md',
+      type: 'markdown_note',
+      data: {
+        title: 'Tutorial: Connecting Your Local Obsidian Vault',
+        contentSnippet: 'Click "Connect Local Vault" in the Knowledge tab to browse your local Markdown folder using browser File System Access API. Zero cloud uploads required.',
+      },
+      source: 'tutorial',
+    },
+    {
+      file: 'Tutorial_Time_Bank.md',
+      path: '/tutorial/Tutorial_Time_Bank.md',
+      relativePath: 'tutorial/Tutorial_Time_Bank.md',
+      type: 'markdown_note',
+      data: {
+        title: 'Tutorial: Understanding Time Bank & Priority Allocation',
+        contentSnippet: 'Stream A (Deep Work), Stream B (Vault Review), and Stream C (Routine) categorize your time blocks to maintain peak output and clear daily audit logs.',
+      },
+      source: 'tutorial',
+    },
+  ];
 
-    return NextResponse.json({
-      success: true,
-      count: records.length,
-      records,
-    });
-  } catch (err: any) {
-    return NextResponse.json({ error: err.message || 'Failed to scan knowledge' }, { status: 500 });
-  }
+  return NextResponse.json({
+    success: true,
+    count: tutorialRecords.length,
+    records: tutorialRecords,
+  });
 }

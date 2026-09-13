@@ -26,32 +26,24 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
     const diffDays = Math.floor((curr.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     const weekNum = Math.floor(diffDays / 7) + 1;
 
-    // Define stream task titles based on week milestone
-    let dsaTitle = 'Binary Trees — Operations & Traversals';
-    let bizTitle = 'WhatsApp Automation — Client 1 Setup & Workflows';
-    let projTitle = 'Portfolio Project — Architecture & GitHub Setup';
+    // Define generic tutorial stream task titles
+    let dsaTitle = 'Core Concepts — Data Structures & Problem Solving';
+    let bizTitle = 'Project Build — Feature Architecture & Execution';
+    let projTitle = 'Portfolio & Knowledge — Vault Setup & Sync';
 
     if (weekNum >= 3 && weekNum <= 4) {
-      dsaTitle = 'Graph Algorithms — BFS, DFS & Topological Sort';
-      bizTitle = 'WhatsApp Automation — Client 2 Closing & Scope 5x';
+      dsaTitle = 'Algorithms & Graphs — Optimization & System Logic';
+      bizTitle = 'Project Scaling — Core Integration & Workflows';
       projTitle = 'Portfolio Project — Shipping MVP Core Features';
     } else if (weekNum >= 5 && weekNum <= 6) {
-      dsaTitle = 'Dynamic Programming — Coin Change & Knapsack';
-      bizTitle = 'WhatsApp Automation — Zero-Revision Delivery for Client 2';
-      projTitle = 'Portfolio Project — 500 Stars Push & HN Show';
-    } else if (weekNum >= 7 && weekNum <= 8) {
-      dsaTitle = 'DSA Mock Interview 1 & Timed Hard Problems';
-      bizTitle = 'WhatsApp Automation — $5K MRR Pipeline Scaling';
-      projTitle = 'Portfolio Project — External PRs & Community Growth';
-    } else if (weekNum >= 9) {
-      dsaTitle = 'Advanced DSA — Segment Trees & Disjoint Sets';
-      bizTitle = 'AI Automation Platform — Upsell & Claude API Integration';
-      projTitle = 'Portfolio Project — Commercial Features & Freemium Model';
+      dsaTitle = 'Dynamic Programming & System Design';
+      bizTitle = 'Project Delivery — Testing & Quality Assurance';
+      projTitle = 'Portfolio Project — External Setup & Release';
     }
 
     const dayTasks: TaskInstance[] = [];
 
-    // MON: College timetable 10:30-12:30, 13:30-14:30. Travel: 08:30-10:30, 14:30-16:30.
+    // MON
     if (dowIndex === 1) {
       dayTasks.push(
         {
@@ -61,8 +53,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '08:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `DSA Grind: ${dsaTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::06:30] [END::08:30] [TYPE::A] [TASK::DSA Grind: ${dsaTitle}]`,
+          task: `Deep Work: ${dsaTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::06:30] [END::08:30] [TYPE::A] [TASK::Deep Work: ${dsaTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -73,8 +65,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '18:00',
           type: 'C',
           deadline: `${dateKey} 23:59`,
-          task: 'College Studies, Assignments & Submissions',
-          rawLine: `[DATE::${dateKey}] [START::16:30] [END::18:00] [TYPE::C] [TASK::College Studies, Assignments & Submissions]`,
+          task: 'Studies, Assignments & Submissions',
+          rawLine: `[DATE::${dateKey}] [START::16:30] [END::18:00] [TYPE::C] [TASK::Studies, Assignments & Submissions]`,
           isValid: true,
           status: 'pending',
         },
@@ -85,8 +77,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '19:45',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `WhatsApp Agency: ${bizTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::18:15] [END::19:45] [TYPE::A] [TASK::WhatsApp Agency: ${bizTitle}]`,
+          task: `Execution Block: ${bizTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::18:15] [END::19:45] [TYPE::A] [TASK::Execution Block: ${bizTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -97,14 +89,14 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '21:30',
           type: 'B',
           deadline: `${dateKey} 23:59`,
-          task: `Portfolio Build: ${projTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::20:00] [END::21:30] [TYPE::B] [TASK::Portfolio Build: ${projTitle}]`,
+          task: `Review Session: ${projTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::20:00] [END::21:30] [TYPE::B] [TASK::Review Session: ${projTitle}]`,
           isValid: true,
           status: 'pending',
         }
       );
     }
-    // TUE: College timetable 10:30-17:30. Travel: 08:30-10:30, 17:30-19:30.
+    // TUE
     else if (dowIndex === 2) {
       dayTasks.push(
         {
@@ -114,8 +106,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '08:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `DSA Grind: ${dsaTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::06:30] [END::08:30] [TYPE::A] [TASK::DSA Grind: ${dsaTitle}]`,
+          task: `Deep Work: ${dsaTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::06:30] [END::08:30] [TYPE::A] [TASK::Deep Work: ${dsaTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -126,8 +118,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '21:00',
           type: 'C',
           deadline: `${dateKey} 23:59`,
-          task: 'College Studies, Assignments & Submissions',
-          rawLine: `[DATE::${dateKey}] [START::19:30] [END::21:00] [TYPE::C] [TASK::College Studies, Assignments & Submissions]`,
+          task: 'Studies, Assignments & Submissions',
+          rawLine: `[DATE::${dateKey}] [START::19:30] [END::21:00] [TYPE::C] [TASK::Studies, Assignments & Submissions]`,
           isValid: true,
           status: 'pending',
         },
@@ -138,14 +130,14 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '22:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `WhatsApp Agency: ${bizTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::21:00] [END::22:30] [TYPE::A] [TASK::WhatsApp Agency: ${bizTitle}]`,
+          task: `Execution Block: ${bizTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::21:00] [END::22:30] [TYPE::A] [TASK::Execution Block: ${bizTitle}]`,
           isValid: true,
           status: 'pending',
         }
       );
     }
-    // WED: College timetable 10:30-15:30. Travel: 08:30-10:30, 15:30-17:30.
+    // WED
     else if (dowIndex === 3) {
       dayTasks.push(
         {
@@ -155,8 +147,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '08:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `DSA Grind: ${dsaTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::06:30] [END::08:30] [TYPE::A] [TASK::DSA Grind: ${dsaTitle}]`,
+          task: `Deep Work: ${dsaTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::06:30] [END::08:30] [TYPE::A] [TASK::Deep Work: ${dsaTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -167,8 +159,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '19:00',
           type: 'C',
           deadline: `${dateKey} 23:59`,
-          task: 'College Studies, Assignments & Submissions',
-          rawLine: `[DATE::${dateKey}] [START::17:30] [END::19:00] [TYPE::C] [TASK::College Studies, Assignments & Submissions]`,
+          task: 'Studies, Assignments & Submissions',
+          rawLine: `[DATE::${dateKey}] [START::17:30] [END::19:00] [TYPE::C] [TASK::Studies, Assignments & Submissions]`,
           isValid: true,
           status: 'pending',
         },
@@ -179,8 +171,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '20:45',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `WhatsApp Agency: ${bizTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::19:15] [END::20:45] [TYPE::A] [TASK::WhatsApp Agency: ${bizTitle}]`,
+          task: `Execution Block: ${bizTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::19:15] [END::20:45] [TYPE::A] [TASK::Execution Block: ${bizTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -191,14 +183,14 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '22:30',
           type: 'B',
           deadline: `${dateKey} 23:59`,
-          task: `Portfolio Build: ${projTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::21:00] [END::22:30] [TYPE::B] [TASK::Portfolio Build: ${projTitle}]`,
+          task: `Review Session: ${projTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::21:00] [END::22:30] [TYPE::B] [TASK::Review Session: ${projTitle}]`,
           isValid: true,
           status: 'pending',
         }
       );
     }
-    // THU: College timetable 09:30-10:30, 13:30-18:30. Travel: 07:30-09:30, 18:30-20:30.
+    // THU
     else if (dowIndex === 4) {
       dayTasks.push(
         {
@@ -208,8 +200,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '07:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `DSA Grind: ${dsaTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::06:00] [END::07:30] [TYPE::A] [TASK::DSA Grind: ${dsaTitle}]`,
+          task: `Deep Work: ${dsaTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::06:00] [END::07:30] [TYPE::A] [TASK::Deep Work: ${dsaTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -220,8 +212,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '12:30',
           type: 'B',
           deadline: `${dateKey} 23:59`,
-          task: `Portfolio Build: ${projTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::11:00] [END::12:30] [TYPE::B] [TASK::Portfolio Build: ${projTitle}]`,
+          task: `Review Session: ${projTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::11:00] [END::12:30] [TYPE::B] [TASK::Review Session: ${projTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -232,8 +224,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '21:30',
           type: 'C',
           deadline: `${dateKey} 23:59`,
-          task: 'College Studies, Assignments & Submissions',
-          rawLine: `[DATE::${dateKey}] [START::20:30] [END::21:30] [TYPE::C] [TASK::College Studies, Assignments & Submissions]`,
+          task: 'Studies, Assignments & Submissions',
+          rawLine: `[DATE::${dateKey}] [START::20:30] [END::21:30] [TYPE::C] [TASK::Studies, Assignments & Submissions]`,
           isValid: true,
           status: 'pending',
         },
@@ -244,14 +236,14 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '23:00',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `WhatsApp Agency: ${bizTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::21:30] [END::23:00] [TYPE::A] [TASK::WhatsApp Agency: ${bizTitle}]`,
+          task: `Execution Block: ${bizTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::21:30] [END::23:00] [TYPE::A] [TASK::Execution Block: ${bizTitle}]`,
           isValid: true,
           status: 'pending',
         }
       );
     }
-    // FRI: College timetable 09:30-12:30, 13:30-15:30, 16:30-18:30. Travel: 07:30-09:30, 18:30-20:30.
+    // FRI
     else if (dowIndex === 5) {
       dayTasks.push(
         {
@@ -261,8 +253,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '07:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `DSA Grind: ${dsaTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::06:00] [END::07:30] [TYPE::A] [TASK::DSA Grind: ${dsaTitle}]`,
+          task: `Deep Work: ${dsaTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::06:00] [END::07:30] [TYPE::A] [TASK::Deep Work: ${dsaTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -273,8 +265,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '21:30',
           type: 'C',
           deadline: `${dateKey} 23:59`,
-          task: 'College Studies, Assignments & Submissions',
-          rawLine: `[DATE::${dateKey}] [START::20:30] [END::21:30] [TYPE::C] [TASK::College Studies, Assignments & Submissions]`,
+          task: 'Studies, Assignments & Submissions',
+          rawLine: `[DATE::${dateKey}] [START::20:30] [END::21:30] [TYPE::C] [TASK::Studies, Assignments & Submissions]`,
           isValid: true,
           status: 'pending',
         },
@@ -285,14 +277,14 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '23:00',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `WhatsApp Agency: ${bizTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::21:30] [END::23:00] [TYPE::A] [TASK::WhatsApp Agency: ${bizTitle}]`,
+          task: `Execution Block: ${bizTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::21:30] [END::23:00] [TYPE::A] [TASK::Execution Block: ${bizTitle}]`,
           isValid: true,
           status: 'pending',
         }
       );
     }
-    // SAT: No classes. Today Sept 12 2026 starts after 14:00.
+    // SAT
     else if (dowIndex === 6) {
       dayTasks.push(
         {
@@ -302,8 +294,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '16:15',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `WhatsApp Agency: ${bizTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::14:15] [END::16:15] [TYPE::A] [TASK::WhatsApp Agency: ${bizTitle}]`,
+          task: `Tutorial: OVERRUN Quickstart & Local Setup`,
+          rawLine: `[DATE::${dateKey}] [START::14:15] [END::16:15] [TYPE::A] [TASK::Tutorial: OVERRUN Quickstart & Local Setup]`,
           isValid: true,
           status: 'pending',
         },
@@ -314,8 +306,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '18:00',
           type: 'C',
           deadline: `${dateKey} 23:59`,
-          task: 'College Studies, Assignments & Submissions',
-          rawLine: `[DATE::${dateKey}] [START::16:30] [END::18:00] [TYPE::C] [TASK::College Studies, Assignments & Submissions]`,
+          task: 'Studies, Assignments & Submissions',
+          rawLine: `[DATE::${dateKey}] [START::16:30] [END::18:00] [TYPE::C] [TASK::Studies, Assignments & Submissions]`,
           isValid: true,
           status: 'pending',
         },
@@ -326,8 +318,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '20:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `DSA Grind: ${dsaTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::18:30] [END::20:30] [TYPE::A] [TASK::DSA Grind: ${dsaTitle}]`,
+          task: `Deep Work: ${dsaTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::18:30] [END::20:30] [TYPE::A] [TASK::Deep Work: ${dsaTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -338,8 +330,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '22:30',
           type: 'B',
           deadline: `${dateKey} 23:59`,
-          task: `Portfolio Build: ${projTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::21:00] [END::22:30] [TYPE::B] [TASK::Portfolio Build: ${projTitle}]`,
+          task: `Review Session: Connect Local Knowledge Vault`,
+          rawLine: `[DATE::${dateKey}] [START::21:00] [END::22:30] [TYPE::B] [TASK::Review Session: Connect Local Knowledge Vault]`,
           isValid: true,
           status: 'pending',
         }
@@ -355,8 +347,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '11:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `DSA Intensive: ${dsaTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::09:00] [END::11:30] [TYPE::A] [TASK::DSA Intensive: ${dsaTitle}]`,
+          task: `Deep Work Intensive: ${dsaTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::09:00] [END::11:30] [TYPE::A] [TASK::Deep Work Intensive: ${dsaTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -367,8 +359,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '16:30',
           type: 'A',
           deadline: `${dateKey} 23:59`,
-          task: `WhatsApp Agency: ${bizTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::14:00] [END::16:30] [TYPE::A] [TASK::WhatsApp Agency: ${bizTitle}]`,
+          task: `Execution Block: ${bizTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::14:00] [END::16:30] [TYPE::A] [TASK::Execution Block: ${bizTitle}]`,
           isValid: true,
           status: 'pending',
         },
@@ -379,8 +371,8 @@ export function generatePhase1Tasks(startDateStr = '2026-09-12', endDateStr = '2
           end: '19:00',
           type: 'B',
           deadline: `${dateKey} 23:59`,
-          task: `Portfolio Project: ${projTitle}`,
-          rawLine: `[DATE::${dateKey}] [START::17:00] [END::19:00] [TYPE::B] [TASK::Portfolio Project: ${projTitle}]`,
+          task: `Review Session: ${projTitle}`,
+          rawLine: `[DATE::${dateKey}] [START::17:00] [END::19:00] [TYPE::B] [TASK::Review Session: ${projTitle}]`,
           isValid: true,
           status: 'pending',
         }
