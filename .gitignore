@@ -55,6 +55,7 @@ server.log
 
 # IDE & SQLite Databases
 .idea/
+db/
 prisma/db/*.db
 prisma/db/*.sqlite*
 prisma/db/*.sqlite-journal
