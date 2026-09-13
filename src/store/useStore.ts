@@ -462,6 +462,19 @@ export const useStore = create<OverrunState>()(
         obsidianConfig: state.obsidianConfig,
         obsidianNotes: state.obsidianNotes,
       }),
+      onRehydrateStorage: () => (state) => {
+        if (!state) return;
+        // Automatically sanitize and purge legacy personal data from browser storage
+        if (Array.isArray(state.memoryGoals)) {
+          state.memoryGoals = state.memoryGoals.filter(
+            (g) =>
+              !g.id.includes('2cr') &&
+              !g.id.includes('whatsapp') &&
+              !g.title.toLowerCase().includes('2cr') &&
+              !g.title.toLowerCase().includes('whatsapp')
+          );
+        }
+      },
     }
   )
 );

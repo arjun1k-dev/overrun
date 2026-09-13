@@ -1,13 +1,15 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Brain, FileText, Search, Copy, Check, ExternalLink,
   BookOpen, Sparkles, Folder, ArrowRight, ArrowLeft, RefreshCw,
-  Award, Shield, Layers, Code, CheckCircle, ChevronRight, X, Download
+  Award, Shield, Layers, Code, CheckCircle, ChevronRight, X, Download,
+  FolderPlus, Trash2, Upload
 } from 'lucide-react';
 import { useStore } from '@/store/useStore';
+import { parseYaml } from '@/engine/yaml-parser';
 import { YAMLViewer } from '@/components/yaml-viewers/index';
 import {
   aggregateModuleData,
@@ -29,11 +31,143 @@ export function TacticalKnowledgeBase() {
   const [copiedModuleExport, setCopiedModuleExport] = useState<string | null>(null);
   const [copiedPrompt, setCopiedPrompt] = useState<string | null>(null);
   const [showSystemCard, setShowSystemCard] = useState(false);
+  const [folderName, setFolderName] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const obsidianNotes = useStore((s) => s.obsidianNotes);
   const memoryGoals = useStore((s) => s.memoryGoals);
   const updateYamlState = useStore((s) => s.updateYamlState);
   const yamlStates = useStore((s) => s.yamlStates);
+
+  const handleSelectFolder = async () => {
+    try {
+      if (typeof window !== 'undefined' && 'showDirectoryPicker' in window) {
+        setIsLoading(true);
+        const dirHandle = await (window as any).showDirectoryPicker();
+        const customRecords: any[] = [];
+
+        async function scanDirectory(handle: any, relativeDir = '') {
+          for await (const entry of handle.values()) {
+            if (entry.name.startsWith('.') || entry.name === 'node_modules') continue;
+            const relPath = relativeDir ? `${relativeDir}/${entry.name}` : entry.name;
+            if (entry.kind === 'directory') {
+              await scanDirectory(entry, relPath);
+            } else if (
+              entry.kind === 'file' &&
+              (entry.name.endsWith('.md') || entry.name.endsWith('.yaml') || entry.name.endsWith('.yml'))
+            ) {
+              try {
+                const file = await entry.getFile();
+                const text = await file.text();
+                const titleMatch = text.match(/^#\s+(.+)$/m);
+                const title = titleMatch ? titleMatch[1].trim() : entry.name.replace(/\.(md|yaml|yml)$/, '');
+
+                const parsed = parseYaml(text);
+                if (parsed.success) {
+                  customRecords.push({
+                    file: entry.name,
+                    path: relPath,
+                    relativePath: relPath,
+                    type: parsed.type,
+                    data: parsed.data,
+                    source: 'local_folder',
+                  });
+                  const id = parsed.data.topic_id || parsed.data.id || entry.name;
+                  updateYamlState(parsed.type, id, parsed.data);
+                } else {
+                  customRecords.push({
+                    file: entry.name,
+                    path: relPath,
+                    relativePath: relPath,
+                    type: 'markdown_note',
+                    data: {
+                      title,
+                      contentSnippet: text.slice(0, 300),
+                    },
+                    source: 'local_folder',
+                  });
+                }
+              } catch (e) {
+                // ignore unreadable file
+              }
+            }
+          }
+        }
+
+        await scanDirectory(dirHandle, dirHandle.name);
+        setYamlRecords(customRecords);
+        setFolderName(`${dirHandle.name} (${customRecords.length} files scanned)`);
+        setIsLoading(false);
+      } else {
+        fileInputRef.current?.click();
+      }
+    } catch (err: any) {
+      if (err.name !== 'AbortError') {
+        console.error('Folder selection failed:', err);
+      }
+      setIsLoading(false);
+    }
+  };
+
+  const handleFileInputChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+
+    setIsLoading(true);
+    const customRecords: any[] = [];
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      if (file.name.endsWith('.md') || file.name.endsWith('.yaml') || file.name.endsWith('.yml')) {
+        try {
+          const text = await file.text();
+          const titleMatch = text.match(/^#\s+(.+)$/m);
+          const title = titleMatch ? titleMatch[1].trim() : file.name.replace(/\.(md|yaml|yml)$/, '');
+
+          const parsed = parseYaml(text);
+          if (parsed.success) {
+            customRecords.push({
+              file: file.name,
+              path: file.webkitRelativePath || file.name,
+              relativePath: file.webkitRelativePath || file.name,
+              type: parsed.type,
+              data: parsed.data,
+              source: 'local_folder',
+            });
+            const id = parsed.data.topic_id || parsed.data.id || file.name;
+            updateYamlState(parsed.type, id, parsed.data);
+          } else {
+            customRecords.push({
+              file: file.name,
+              path: file.webkitRelativePath || file.name,
+              relativePath: file.webkitRelativePath || file.name,
+              type: 'markdown_note',
+              data: {
+                title,
+                contentSnippet: text.slice(0, 300),
+              },
+              source: 'local_folder',
+            });
+          }
+        } catch {
+          // ignore
+        }
+      }
+    }
+
+    setYamlRecords(customRecords);
+    const rootName = files[0].webkitRelativePath?.split('/')[0] || 'Selected Folder';
+    setFolderName(`${rootName} (${customRecords.length} files scanned)`);
+    setIsLoading(false);
+  };
+
+  const handleClearBrowserData = () => {
+    if (typeof window !== 'undefined' && window.confirm('Clear local browser storage cache and reload clean tutorial state?')) {
+      localStorage.removeItem('overrun-storage');
+      localStorage.removeItem('overrun_tutorial_seen');
+      window.location.reload();
+    }
+  };
 
   const fetchKnowledgeData = async () => {
     setIsLoading(true);
@@ -370,7 +504,26 @@ export function TacticalKnowledgeBase() {
                 </div>
               </div>
 
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                {/* Hidden File Input Fallback */}
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  onChange={handleFileInputChange}
+                  {...({ webkitdirectory: '', directory: '' } as any)}
+                  className="hidden"
+                />
+
+                {/* Pick Local Folder Button */}
+                <button
+                  onClick={handleSelectFolder}
+                  className="px-3.5 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-500/20 hover:opacity-90 border border-blue-400/40"
+                  title="Pick local folder on your computer using Web File System Access API"
+                >
+                  <FolderPlus className="w-4 h-4 text-blue-200" />
+                  <span>Select Local Folder</span>
+                </button>
+
                 <button
                   onClick={fetchKnowledgeData}
                   className="px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all bg-tactical-deep border border-tactical-border text-tactical-muted hover:text-white hover:border-tactical-purple"
@@ -378,8 +531,28 @@ export function TacticalKnowledgeBase() {
                   <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                   Rescan Vault
                 </button>
+
+                <button
+                  onClick={handleClearBrowserData}
+                  className="px-2.5 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1 transition-all bg-red-500/10 border border-red-500/30 text-red-400 hover:bg-red-500/20"
+                  title="Clear legacy cached browser storage and reload clean tutorial"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span>Clear Cache</span>
+                </button>
               </div>
             </div>
+
+            {/* Folder Name Badge */}
+            {folderName && (
+              <div className="mb-4 p-2.5 rounded-lg bg-blue-500/10 border border-blue-500/30 flex items-center justify-between text-xs font-mono text-blue-300">
+                <span className="flex items-center gap-2">
+                  <Folder className="w-4 h-4 text-blue-400" />
+                  Active Local Folder: <strong>{folderName}</strong>
+                </span>
+                <span className="text-[10px] text-blue-400/80">100% Local Browser Processing</span>
+              </div>
+            )}
 
             {/* Quick Stats Grid */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
