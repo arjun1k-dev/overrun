@@ -45,8 +45,27 @@ export const SUBJECT_METADATA: Record<string, { name: string; icon: string; desc
   system: { name: 'System Telemetry & Settings', icon: '⚙️', description: 'Runtime state persistence, session logs, goals, and setup instructions.' },
 };
 
+const RESERVED_SUBJECT_CODES = new Set([
+  'memory', 'imported', 'tutorial', 'markdown_note', 'quiz_result',
+  'progress_state', 'feature_map', 'general', 'unknown', 'system',
+  'overrun', 'null', 'undefined', 'src', 'components', 'app', 'api',
+  'public', 'node_modules', 'plans', '.state', 'state', 'http', 'https', 'local_folder', 'file'
+]);
+
 export function isArtifactForSubject(art: ModuleArtifact, targetCode: string): boolean {
   const code = targetCode.toLowerCase();
+  if (RESERVED_SUBJECT_CODES.has(code)) {
+    if (code === 'system') {
+      const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
+      return pathLower.includes('.state') || pathLower.endsWith('readme.md') || pathLower.includes('notebook_lm_instructions');
+    }
+    if (code === 'overrun') {
+      const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
+      return pathLower.includes('projects/overrun') || pathLower.includes('overrun');
+    }
+    return false;
+  }
+
   const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
   const fileName = (art.file || '').toLowerCase();
   const data = art.data || {};
@@ -54,7 +73,7 @@ export function isArtifactForSubject(art: ModuleArtifact, targetCode: string): b
   // 1. Explicit data properties
   if (data.subject_code && String(data.subject_code).toLowerCase() === code) return true;
   if (data.subject && String(data.subject).toLowerCase() === code) return true;
-  if (data.code && String(data.code).toLowerCase() === code) return true;
+  if (data.code && art.type !== 'markdown_note' && String(data.code).toLowerCase() === code) return true;
   if (data.module && String(data.module).toLowerCase() === code) return true;
 
   // 2. Topic prefix match
@@ -84,40 +103,72 @@ export function extractSubjectCodesFromArtifacts(allArtifacts: ModuleArtifact[])
   allArtifacts.forEach((art) => {
     if (art.type === 'feature_map' || art.data?.type === 'feature_map') {
       const artCode = (art.data?.code || art.data?.subject_code || art.data?.subject || '').toLowerCase();
-      if (artCode) {
+      if (artCode && !RESERVED_SUBJECT_CODES.has(artCode)) {
         registerCustomFeatureMap(artCode, art.data);
       }
     }
   });
 
   // 2. Add all registered feature map codes
-  Object.keys(FEATURE_MAP_REGISTRY).forEach((code) => codes.add(code.toLowerCase()));
+  Object.keys(FEATURE_MAP_REGISTRY).forEach((code) => {
+    const clean = code.toLowerCase();
+    if (!RESERVED_SUBJECT_CODES.has(clean)) {
+      codes.add(clean);
+    }
+  });
 
   // 3. Scan all artifacts for subject indicators
   allArtifacts.forEach((art) => {
     const data = art.data || {};
-    if (data.subject_code) codes.add(String(data.subject_code).toLowerCase());
-    if (data.subject) codes.add(String(data.subject).toLowerCase());
-    if (data.code && art.type !== 'markdown_note') codes.add(String(data.code).toLowerCase());
-    if (data.module) codes.add(String(data.module).toLowerCase());
+    if (data.subject_code) {
+      const c = String(data.subject_code).toLowerCase().trim();
+      if (!RESERVED_SUBJECT_CODES.has(c)) codes.add(c);
+    }
+    if (data.subject) {
+      const c = String(data.subject).toLowerCase().trim();
+      if (!RESERVED_SUBJECT_CODES.has(c)) codes.add(c);
+    }
+    if (data.module) {
+      const c = String(data.module).toLowerCase().trim();
+      if (!RESERVED_SUBJECT_CODES.has(c)) codes.add(c);
+    }
+    if (data.code && art.type !== 'markdown_note') {
+      const c = String(data.code).toLowerCase().trim();
+      if (!RESERVED_SUBJECT_CODES.has(c)) codes.add(c);
+    }
 
     const pathLower = (art.relativePath || art.filePath || art.file || '').toLowerCase();
-    
-    // Check path for subject folders (e.g. dsa/notes.md or assessments/dsa/...)
-    const parts = pathLower.split(/[/\\]/);
-    parts.forEach((p) => {
-      if (p && !['assessments', 'imported', 'memory', 'tutorial', 'plans', '.state', 'node_modules', 'public'].includes(p)) {
-        if (!p.includes('.')) {
-          codes.add(p);
+
+    // Check assessments/<code_folder> or subjects/<code_folder> or modules/<code_folder>
+    const folderMatch = pathLower.match(/(?:assessments|subjects|modules)\/([a-z0-9_-]+)/);
+    if (folderMatch && folderMatch[1]) {
+      const c = folderMatch[1].toLowerCase().trim();
+      if (!RESERVED_SUBJECT_CODES.has(c) && !c.startsWith('_')) {
+        codes.add(c);
+      }
+    }
+
+    // Check quiz_result_<code_or_topic>
+    const quizMatch = pathLower.match(/quiz_result_([a-z0-9]+)/);
+    if (quizMatch && quizMatch[1]) {
+      const c = quizMatch[1].toLowerCase().trim();
+      if (!RESERVED_SUBJECT_CODES.has(c)) codes.add(c);
+    }
+
+    // Check topic prefix in quiz_result (e.g. "dsa_binary_search")
+    if (art.type === 'quiz_result' || art.data?.type === 'quiz_result') {
+      const topic = String(data.topic || data.topic_id || '').toLowerCase().trim();
+      const prefixMatch = topic.match(/^([a-z0-9]+)[:_]/);
+      if (prefixMatch && prefixMatch[1]) {
+        const c = prefixMatch[1];
+        if (!RESERVED_SUBJECT_CODES.has(c) && c.length >= 2 && c.length <= 12) {
+          codes.add(c);
         }
       }
-    });
-
-    const quizMatch = pathLower.match(/quiz_result_([a-z0-9]+)/);
-    if (quizMatch && quizMatch[1]) codes.add(quizMatch[1]);
+    }
   });
 
-  return Array.from(codes).filter((c) => c && c !== 'system' && c !== 'overrun' && c.length <= 20);
+  return Array.from(codes).filter((c) => c && !RESERVED_SUBJECT_CODES.has(c) && c.length <= 20);
 }
 
 /**
