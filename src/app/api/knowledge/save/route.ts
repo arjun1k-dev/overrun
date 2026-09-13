@@ -5,9 +5,7 @@ import fs from 'fs';
 import path from 'path';
 import { getSchemaDirectory, SchemaType } from '@/engine/schema-registry';
 import { serializeToMarkdown, serializeYaml } from '@/engine/yaml-parser';
-import { getSubjectFeatureMap } from '@/engine/feature-map-registry';
-
-const KNOWN_SUBJECT_CODES = ['dsa', 'eca', 'nmcp', 'ss', 'ade', 'fse', 'da', 'eco', 'es'];
+import { getSubjectFeatureMap, FEATURE_MAP_REGISTRY } from '@/engine/feature-map-registry';
 
 export async function POST(request: Request) {
   try {
@@ -30,7 +28,8 @@ export async function POST(request: Request) {
       let bestMatch: string | null = null;
       let bestMatchScore = 0;
 
-      for (const code of KNOWN_SUBJECT_CODES) {
+      const registeredCodes = Object.keys(FEATURE_MAP_REGISTRY);
+      for (const code of registeredCodes) {
         const featureMap = getSubjectFeatureMap(code);
         if (featureMap && featureMap.features.length > 0) {
           // Score this subject based on how well the topic matches its features

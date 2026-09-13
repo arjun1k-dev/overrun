@@ -19,7 +19,7 @@ import {
   ModuleArtifact
 } from '@/engine/module-exporter';
 
-const ALL_SUBJECT_CODES = ['dsa', 'eca', 'nmcp', 'ss', 'ade', 'fse', 'da', 'eco', 'es', 'overrun', 'system'];
+import { FEATURE_MAP_REGISTRY } from '@/engine/feature-map-registry';
 
 export function TacticalKnowledgeBase() {
   const [yamlRecords, setYamlRecords] = useState<any[]>([]);
@@ -249,10 +249,29 @@ export function TacticalKnowledgeBase() {
     }));
   }, [yamlRecords, yamlStates]);
 
+  // Dynamically extract subject codes from artifacts and feature map registry
+  const availableSubjectCodes = useMemo(() => {
+    const codes = new Set<string>();
+
+    Object.keys(FEATURE_MAP_REGISTRY).forEach((code) => codes.add(code.toLowerCase()));
+
+    allArtifacts.forEach((art) => {
+      if (art.data?.subject_code) codes.add(art.data.subject_code.toLowerCase());
+      if (art.data?.code) codes.add(art.data.code.toLowerCase());
+      const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
+      const match = pathLower.match(/assessments\/([^\/]+)/);
+      if (match && match[1] && !match[1].startsWith('_')) {
+        codes.add(match[1]);
+      }
+    });
+
+    return Array.from(codes);
+  }, [allArtifacts]);
+
   // Aggregate all modules into ModuleSummaryData objects
   const modulesSummaryList = useMemo(() => {
-    return ALL_SUBJECT_CODES.map((code) => aggregateModuleData(code, allArtifacts));
-  }, [allArtifacts]);
+    return availableSubjectCodes.map((code) => aggregateModuleData(code, allArtifacts));
+  }, [availableSubjectCodes, allArtifacts]);
 
   // Filter modules based on search query
   const filteredModuleCards = useMemo(() => {

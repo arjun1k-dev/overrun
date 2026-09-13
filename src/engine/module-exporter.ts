@@ -41,15 +41,6 @@ export interface ModuleSummaryData {
 }
 
 export const SUBJECT_METADATA: Record<string, { name: string; icon: string; description: string }> = {
-  dsa: { name: 'Data Structures & Algorithms', icon: '🧮', description: 'Core CS data structures, asymptotic analysis, tree algorithms, and graph paradigms.' },
-  eca: { name: 'Electrical Circuit Analysis', icon: '⚡', description: 'Kirchhoff\'s laws, network topology, transient analysis, Laplace transforms, AC power, three-phase circuits, and two-port networks.' },
-  nmcp: { name: 'Numerical Methods & Computer Programming', icon: '🔢', description: 'Iterative root finding, linear systems solvers, interpolation, and numerical calculus.' },
-  ss: { name: 'Signals & Systems', icon: '📡', description: 'Continuous & discrete signals, LTI systems, Fourier, Laplace, and Z-transforms.' },
-  ade: { name: 'Analog & Digital Electronics', icon: '🔌', description: 'Diodes, BJTs, Op-Amps, Boolean logic gates, sequential counters, and data converters.' },
-  fse: { name: 'Fundamentals of Software Engineering', icon: '🛠️', description: 'SDLC models, UML diagramming, SOLID principles, testing QA, and DevOps.' },
-  da: { name: 'Data Analytics', icon: '📊', description: 'Data wrangling, EDA, applied inferential statistics, visualization, and regression.' },
-  eco: { name: 'Economics', icon: '📈', description: 'Micro/macroeconomics, engineering time-value-of-money, IRR, and cost depreciation.' },
-  es: { name: 'Environmental Science', icon: '🌿', description: 'Ecosystems, environmental pollution control, waste management, and sustainability.' },
   overrun: { name: 'Overrun Project System', icon: '🚀', description: 'Internal system architecture, data models, schema definitions, and workflow engines.' },
   system: { name: 'System Telemetry & Settings', icon: '⚙️', description: 'Runtime state persistence, session logs, goals, and setup instructions.' },
 };
@@ -58,7 +49,7 @@ export const SUBJECT_METADATA: Record<string, { name: string; icon: string; desc
  * Aggregates all raw knowledge records for a subject code into a single ModuleSummaryData object
  */
 export function aggregateModuleData(code: string, allArtifacts: ModuleArtifact[]): ModuleSummaryData {
-  const meta = SUBJECT_METADATA[code] || { name: code.toUpperCase(), icon: '📁', description: `${code} knowledge module.` };
+  const meta = SUBJECT_METADATA[code] || { name: code.toUpperCase(), icon: '📁', description: `${code.toUpperCase()} knowledge module.` };
   const featureMap = getSubjectFeatureMap(code);
   
   // Filter artifacts belonging strictly to this module

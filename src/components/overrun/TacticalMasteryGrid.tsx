@@ -15,7 +15,7 @@ import {
   ModuleArtifact
 } from '@/engine/module-exporter';
 
-const ACADEMIC_SUBJECT_CODES = ['dsa', 'eca', 'nmcp', 'ss', 'ade', 'fse', 'da', 'eco', 'es'];
+import { FEATURE_MAP_REGISTRY } from '@/engine/feature-map-registry';
 
 export function TacticalMasteryGrid() {
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -109,9 +109,28 @@ export function TacticalMasteryGrid() {
     }));
   }, [yamlRecords, yamlStates]);
 
-  // Aggregate telemetry for all 9 academic subject modules
+  // Dynamically extract subject codes from artifacts and feature map registry
+  const academicSubjectCodes = useMemo(() => {
+    const codes = new Set<string>();
+
+    Object.keys(FEATURE_MAP_REGISTRY).forEach((code) => codes.add(code.toLowerCase()));
+
+    allArtifacts.forEach((art) => {
+      if (art.data?.subject_code) codes.add(art.data.subject_code.toLowerCase());
+      if (art.data?.code) codes.add(art.data.code.toLowerCase());
+      const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
+      const match = pathLower.match(/assessments\/([^\/]+)/);
+      if (match && match[1] && !match[1].startsWith('_')) {
+        codes.add(match[1]);
+      }
+    });
+
+    return Array.from(codes).filter((c) => c !== 'system' && c !== 'overrun');
+  }, [allArtifacts]);
+
+  // Aggregate telemetry dynamically for discovered subject modules
   const moduleMasteryList = useMemo(() => {
-    const modules = ACADEMIC_SUBJECT_CODES.map((code) => aggregateModuleData(code, allArtifacts));
+    const modules = academicSubjectCodes.map((code) => aggregateModuleData(code, allArtifacts));
     
     return modules.sort((a, b) => {
       switch (sortBy) {
@@ -127,7 +146,7 @@ export function TacticalMasteryGrid() {
           return 0;
       }
     });
-  }, [allArtifacts, sortBy]);
+  }, [academicSubjectCodes, allArtifacts, sortBy]);
 
   const activeModuleSummary = useMemo(() => {
     if (!activeModuleCode) return null;
@@ -178,7 +197,7 @@ export function TacticalMasteryGrid() {
             <div>
               <h2 className="text-xl font-bold text-tactical">Subject Mastery Intelligence</h2>
               <p className="text-xs text-tactical-muted font-mono">
-                Real-Time Telemetry • 9 Academic Modules • Weak Spot Diagnostics
+                Real-Time Telemetry • {moduleMasteryList.length} Active Modules • Weak Spot Diagnostics
               </p>
             </div>
           </div>
@@ -257,18 +276,27 @@ export function TacticalMasteryGrid() {
       </div>
 
       {/* 🎴 ACADEMIC SUBJECT MODULE CARDS GRID */}
-      <AnimatePresence mode="wait">
-        <motion.div
-          key={viewMode}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className={
-            viewMode === 'grid'
-              ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'
-              : 'space-y-4'
-          }
-        >
+      {moduleMasteryList.length === 0 ? (
+        <div className="tactical-card p-10 text-center space-y-3 border-dashed border-tactical-border">
+          <Brain className="w-10 h-10 text-tactical-muted mx-auto opacity-50" />
+          <h3 className="text-base font-bold text-tactical">No Active Study Modules</h3>
+          <p className="text-xs text-tactical-muted max-w-md mx-auto font-mono">
+            Connect your local knowledge vault or import a subject feature map to dynamically track module mastery.
+          </p>
+        </div>
+      ) : (
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={viewMode}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className={
+              viewMode === 'grid'
+                ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5'
+                : 'space-y-4'
+            }
+          >
           {moduleMasteryList.map((mod, index) => {
             const masteryColor = getMasteryColor(mod.overallMasteryPct);
 
@@ -380,6 +408,7 @@ export function TacticalMasteryGrid() {
           })}
         </motion.div>
       </AnimatePresence>
+      )}
 
       {/* 🔍 INTERACTIVE MODULE MASTERY DRAWER MODAL */}
       <AnimatePresence>
