@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = "force-static";
 import { syncVaultToDatabase } from '@/engine/vault-sync';
 
 export async function POST(request: Request) {

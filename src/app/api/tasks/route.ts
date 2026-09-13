@@ -1,4 +1,6 @@
 import { NextResponse } from 'next/server';
+
+export const dynamic = "force-static";
 import { db } from '@/lib/db';
 
 const taskModel = (db as any).task;

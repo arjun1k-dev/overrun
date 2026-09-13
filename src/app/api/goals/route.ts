@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import { db } from '@/lib/db';
 
+export const dynamic = "force-static";
+
 const goalModel = (db as any).goal;
 
 // GET /api/goals — fetch all goals from SQLite
