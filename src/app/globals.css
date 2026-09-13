@@ -1,0 +1,764 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@theme inline {
+  --font-sans: var(--font-sans);
+  --font-mono: var(--font-mono);
+}
+
+:root {
+  /* TACTICAL COMMAND CENTER COLOR PALETTE */
+  --background: #0A1628;
+  --foreground: #F3F4F6;
+  --card: #1F2937;
+  --card-foreground: #F3F4F6;
+  --border: #374151;
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #8B5CF6;
+  --secondary-foreground: #FFFFFF;
+  --muted: #9CA3AF;
+  --muted-foreground: #6B7280;
+  --accent: #10B981;
+  --accent-foreground: #FFFFFF;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --radius: 0.5rem;
+}
+
+@layer base {
+  * {
+    border-color: #374151 !important;
+  }
+
+  body {
+    background-color: #0A1628 !important;
+    color: #F3F4F6 !important;
+    font-family: 'Inter', 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #0A1628;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #374151;
+    border-radius: 3px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #3B82F6;
+  }
+}
+
+/* ============================================================ */
+/* TACTICAL COMMAND CENTER DESIGN SYSTEM                         */
+/* ============================================================ */
+
+.overrun-root {
+  background-color: #0A1628;
+  color: #F3F4F6;
+  font-family: 'Inter', system-ui, sans-serif;
+  min-height: 100vh;
+  background-image:
+    radial-gradient(ellipse at top, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+    radial-gradient(ellipse at bottom, rgba(16, 185, 129, 0.05) 0%, transparent 50%);
+}
+
+/* Tactical Card System */
+.tactical-card {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.9) 0%, rgba(17, 24, 39, 0.8) 100%);
+  border: 1px solid #374151;
+  border-radius: 0.75rem;
+  backdrop-filter: blur(10px);
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tactical-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg,
+    #3B82F6 0%,
+    #10B981 50%,
+    #8B5CF6 100%
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tactical-card:hover {
+  border-color: #3B82F6;
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+}
+
+.tactical-card:hover::before {
+  opacity: 1;
+}
+
+/* Status Indicators */
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.status-dot.success {
+  background: #10B981;
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+  animation: pulse-success 2s infinite;
+}
+
+.status-dot.warning {
+  background: #F59E0B;
+  box-shadow: 0 0 10px rgba(245, 158, 11, 0.5);
+  animation: pulse-warning 2s infinite;
+}
+
+.status-dot.danger {
+  background: #EF4444;
+  box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+  animation: pulse-danger 2s infinite;
+}
+
+.status-dot.intel {
+  background: #8B5CF6;
+  box-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
+  animation: pulse-intel 2s infinite;
+}
+
+@keyframes pulse-success {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+@keyframes pulse-warning {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+@keyframes pulse-danger {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+@keyframes pulse-intel {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.7; transform: scale(1.1); }
+}
+
+/* Progress Bars */
+.tactical-progress {
+  height: 6px;
+  background: rgba(10, 22, 40, 0.5);
+  border-radius: 3px;
+  overflow: hidden;
+  position: relative;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.tactical-progress-bar {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.6s ease;
+  position: relative;
+}
+
+.tactical-progress-bar::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.2) 50%,
+    transparent 100%
+  );
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Navigation Elements */
+.tactical-nav {
+  background: rgba(17, 24, 39, 0.95);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid #374151;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tactical-nav-item {
+  position: relative;
+  padding: 0.5rem 1rem;
+  color: #9CA3AF;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  border-radius: 0.5rem;
+}
+
+.tactical-nav-item:hover {
+  color: #F3F4F6;
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.tactical-nav-item.active {
+  color: #3B82F6;
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.tactical-nav-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0.5rem;
+  right: 0.5rem;
+  height: 2px;
+  background: #3B82F6;
+  border-radius: 1px;
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
+}
+
+/* Data Visualization */
+.tactical-gauge {
+  position: relative;
+  width: 120px;
+  height: 120px;
+}
+
+.tactical-gauge-circle {
+  fill: none;
+  stroke: #374151;
+  stroke-width: 8;
+}
+
+.tactical-gauge-progress {
+  fill: none;
+  stroke-width: 8;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.6s ease;
+  filter: drop-shadow(0 0 6px currentColor);
+}
+
+/* Timeline Styles */
+.tactical-timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.tactical-timeline::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(180deg,
+    #3B82F6 0%,
+    #374151 100%
+  );
+  box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+}
+
+.tactical-timeline-item {
+  position: relative;
+  padding-bottom: 1.5rem;
+}
+
+.tactical-timeline-item::before {
+  content: '';
+  position: absolute;
+  left: -2.375rem;
+  top: 0.25rem;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #0A1628;
+  border: 2px solid #3B82F6;
+  box-shadow: 0 0 15px rgba(59, 130, 246, 0.5);
+  z-index: 10;
+}
+
+/* Input Elements */
+.tactical-input {
+  background: rgba(10, 22, 40, 0.8);
+  border: 1px solid #374151;
+  color: #F3F4F6;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.tactical-input:focus {
+  outline: none;
+  border-color: #3B82F6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15), 0 0 15px rgba(59, 130, 246, 0.2);
+}
+
+/* Button Styles */
+.tactical-btn {
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.5rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.tactical-btn::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.1) 50%,
+    transparent 100%
+  );
+  transform: translateX(-100%);
+  transition: transform 0.6s ease;
+}
+
+.tactical-btn:hover::before {
+  transform: translateX(100%);
+}
+
+.tactical-btn-primary {
+  background: #3B82F6;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.tactical-btn-primary:hover {
+  background: #60A5FA;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.tactical-btn-primary:active {
+  transform: translateY(0);
+}
+
+/* Utility Classes with proper colors */
+.text-tactical {
+  color: #F3F4F6;
+}
+
+.text-tactical-muted {
+  color: #9CA3AF;
+}
+
+.bg-tactical-deep {
+  background-color: #0A1628;
+}
+
+.border-tactical {
+  border-color: #374151;
+}
+
+.bg-tactical-primary {
+  background-color: #3B82F6;
+}
+
+.bg-tactical-success {
+  background-color: #10B981;
+}
+
+.bg-tactical-warning {
+  background-color: #F59E0B;
+}
+
+.bg-tactical-danger {
+  background-color: #EF4444;
+}
+
+.bg-tactical-purple {
+  background-color: #8B5CF6;
+}
+
+.text-tactical-primary {
+  color: #3B82F6;
+}
+
+.text-tactical-success {
+  color: #10B981;
+}
+
+.text-tactical-warning {
+  color: #F59E0B;
+}
+
+.text-tactical-danger {
+  color: #EF4444;
+}
+
+.text-tactical-purple {
+  color: #8B5CF6;
+}
+
+/* Animation Classes */
+.animate-in {
+  animation: fadeInUp 0.5s ease forwards;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Glow effects */
+.glow-primary {
+  box-shadow: 0 0 20px rgba(59, 130, 246, 0.3);
+}
+
+.glow-success {
+  box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
+}
+
+.glow-warning {
+  box-shadow: 0 0 20px rgba(245, 158, 11, 0.3);
+}
+
+.glow-danger {
+  box-shadow: 0 0 20px rgba(239, 68, 68, 0.3);
+}
+
+.glow-purple {
+  box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+}
+
+/* Enhanced Hover Effects */
+.hover-lift {
+  transition: all 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 24px rgba(0, 0, 0, 0.15);
+}
+
+.hover-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-glow:hover {
+  box-shadow: 0 0 30px rgba(59, 130, 246, 0.4);
+}
+
+.hover-scale {
+  transition: all 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-brightness {
+  transition: all 0.2s ease;
+}
+
+.hover-brightness:hover {
+  filter: brightness(1.2);
+}
+
+.hover-blur {
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.hover-blur:hover {
+  backdrop-filter: blur(15px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+}
+
+/* Specific hover effects by color */
+.hover-primary-glow:hover {
+  box-shadow: 0 0 25px rgba(59, 130, 246, 0.5);
+  border-color: #60A5FA;
+}
+
+.hover-success-glow:hover {
+  box-shadow: 0 0 25px rgba(16, 185, 129, 0.5);
+  border-color: #34D399;
+}
+
+.hover-warning-glow:hover {
+  box-shadow: 0 0 25px rgba(245, 158, 11, 0.5);
+  border-color: #FBBF24;
+}
+
+.hover-danger-glow:hover {
+  box-shadow: 0 0 25px rgba(239, 68, 68, 0.5);
+  border-color: #F87171;
+}
+
+.hover-purple-glow:hover {
+  box-shadow: 0 0 25px rgba(139, 92, 246, 0.5);
+  border-color: #A78BFA;
+}
+
+/* Interactive element hover states */
+.hover-interactive {
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.hover-interactive:hover {
+  background: rgba(59, 130, 246, 0.1);
+  border-color: #3B82F6;
+  transform: translateY(-1px);
+}
+
+.hover-interactive:active {
+  transform: translateY(0);
+}
+
+/* Button hover states */
+.hover-btn-primary {
+  transition: all 0.3s ease;
+}
+
+.hover-btn-primary:hover {
+  background: #60A5FA;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(59, 130, 246, 0.4);
+}
+
+.hover-btn-primary:active {
+  transform: translateY(0);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+/* Card hover effects */
+.hover-card {
+  transition: all 0.3s ease;
+}
+
+.hover-card:hover {
+  border-color: #3B82F6;
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.95) 0%, rgba(17, 24, 39, 0.9) 100%);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15);
+}
+
+/* Icon hover effects */
+.hover-icon {
+  transition: all 0.2s ease;
+}
+
+.hover-icon:hover {
+  transform: scale(1.2) rotate(5deg);
+}
+
+.hover-icon-spin:hover {
+  animation: iconSpin 0.6s ease;
+}
+
+@keyframes iconSpin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Text hover effects */
+.hover-text-glow:hover {
+  text-shadow: 0 0 20px currentColor;
+}
+
+/* Border hover effects */
+.hover-border-glow {
+  transition: all 0.3s ease;
+}
+
+.hover-border-glow:hover {
+  box-shadow: 0 0 15px currentColor, inset 0 0 15px currentColor;
+}
+
+/* Ripple effect */
+.hover-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.hover-ripple::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.1);
+  transform: translate(-50%, -50%);
+  transition: width 0.6s, height 0.6s;
+}
+
+.hover-ripple:hover::after {
+  width: 300%;
+  height: 300%;
+}
+
+/* Shimmer effect on hover */
+.hover-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.hover-shimmer::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.hover-shimmer:hover::before {
+  left: 100%;
+}
+
+/* Mobile safe area support */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .mobile-compact-text {
+    font-size: 0.75rem;
+    line-height: 1rem;
+  }
+
+  .mobile-hide {
+    display: none;
+  }
+
+  /* Smaller touch targets on mobile */
+  button, .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Responsive spacing */
+  .mobile-spacing-sm > * + * {
+    margin-top: 0.5rem;
+  }
+
+  .mobile-spacing-md > * + * {
+    margin-top: 1rem;
+  }
+}
+
+/* Ensure mobile navigation doesn't overlap content */
+body {
+  padding-bottom: 0;
+}
+
+@media (max-width: 768px) {
+  body {
+    padding-bottom: 60px; /* Space for mobile nav */
+  }
+}
+
+/* Prevent horizontal scroll on mobile */
+body, html {
+  overflow-x: hidden;
+}
+
+/* Responsive text sizes */
+@media (max-width: 640px) {
+  .text-responsive {
+    font-size: clamp(0.875rem, 2vw, 1rem);
+  }
+}
+
+/* Better mobile touch interactions */
+@media (max-width: 768px) {
+  * {
+    -webkit-tap-highlight-color: rgba(59, 130, 246, 0.2);
+  }
+
+  /* Remove hover effects on touch devices */
+  .hover-lift:hover,
+  .hover-card:hover,
+  .hover-scale:hover {
+    transform: none;
+  }
+
+  /* Add active states for touch */
+  .hover-lift:active,
+  .hover-card:active {
+    transform: scale(0.98);
+  }
+}
+
+/* ============================================================ */
+/* HORIZONTAL GRADIENT SHIFTER & PULSE ANIMATIONS               */
+/* ============================================================ */
+
+@keyframes shift-gradient-green {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes shift-gradient-red {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes pulse-glow-green {
+  0%, 100% { box-shadow: 0 0 15px rgba(16, 185, 129, 0.4), inset 0 0 15px rgba(16, 185, 129, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(16, 185, 129, 0.8), inset 0 0 25px rgba(16, 185, 129, 0.4); }
+}
+
+@keyframes pulse-glow-red {
+  0%, 100% { box-shadow: 0 0 15px rgba(239, 68, 68, 0.5), inset 0 0 15px rgba(239, 68, 68, 0.2); }
+  50% { box-shadow: 0 0 30px rgba(239, 68, 68, 0.9), inset 0 0 25px rgba(239, 68, 68, 0.5); }
+}
+
+.task-gradient-active {
+  background: linear-gradient(90deg, rgba(16, 185, 129, 0.3) 0%, rgba(59, 130, 246, 0.4) 50%, rgba(16, 185, 129, 0.3) 100%) !important;
+  background-size: 200% 200% !important;
+  animation: shift-gradient-green 3s ease infinite, pulse-glow-green 2s infinite !important;
+  border-color: #10B981 !important;
+}
+
+.task-gradient-overdue {
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.35) 0%, rgba(245, 158, 11, 0.4) 50%, rgba(239, 68, 68, 0.35) 100%) !important;
+  background-size: 200% 200% !important;
+  animation: shift-gradient-red 2.5s ease infinite, pulse-glow-red 1.8s infinite !important;
+  border-color: #EF4444 !important;
+}

@@ -1,0 +1,158 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id            String    @id @default(cuid())
+  dateKey       String    // "YYYY-MM-DD"
+  start         String    // "HH:MM"
+  end           String    // "HH:MM"
+  type          String    // "A", "B", "C"
+  task          String    // Description
+  status        String    // "pending", "done", "overtime", "skipped"
+  actualEnd     String?   // "HH:MM"
+  deadline      String?   // "YYYY-MM-DD HH:MM"
+  rawLine       String?
+  isValid       Boolean   @default(true)
+  collisionWith String?
+  completedAt   DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+model Goal {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  deadline    String?   // "YYYY-MM-DD"
+  category    String    // "exam", "internship", "project", "skill", "other"
+  topics      String    // Comma-separated or JSON array string of sub-topics
+  status      String    @default("active") // "active", "completed", "archived"
+  createdAt   DateTime  @default(now())
+  completedAt DateTime?
+  updatedAt   DateTime  @updatedAt
+}
+
+model EODLog {
+  id        String   @id @default(cuid())
+  dateKey   String   @unique // "YYYY-MM-DD"
+  summary   String
+  taskNames String   // JSON array string of completed tasks
+  createdAt DateTime @default(now())
+}
+
+model Subject {
+  id           String       @id @default(cuid())
+  name         String       @unique
+  category     String       // "exam", "project", "skill"
+  deadline     String?      // "YYYY-MM-DD"
+  targetScore  Int          @default(100)
+  overallScore Int          @default(0)
+  submodules   SubModule[]
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+}
+
+model SubModule {
+  id           String            @id @default(cuid())
+  subjectId    String
+  subject      Subject           @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  title        String
+  weight       Float             @default(1.0)
+  overallScore Int               @default(0)
+  relPath      String
+  concepts     ConceptProgress[]
+  createdAt    DateTime          @default(now())
+  updatedAt    DateTime          @updatedAt
+}
+
+model ConceptProgress {
+  id            String    @id @default(cuid())
+  subModuleId   String
+  subModule     SubModule @relation(fields: [subModuleId], references: [id], onDelete: Cascade)
+  concept       String
+  score         Int       @default(0)
+  status        String    // "mastered", "needs_revision", "critical_weakness"
+  weakPoints    String    // JSON array string
+  linkedNotes   String    // JSON array string of markdown filenames
+  lastEvaluated String?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+}
+
+// ============================================================
+// Team Tracking & Coordination System Models
+// ============================================================
+
+model Team {
+  id          String       @id @default(cuid())
+  name        String
+  description String?
+  code        String       @unique // Invite code
+  members     TeamMember[]
+  goals       TeamGoal[]
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+}
+
+model TeamMember {
+  id        String   @id @default(cuid())
+  teamId    String
+  team      Team     @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  userId    String?
+  name      String
+  role      String   @default("MEMBER") // "LEADER", "MEMBER"
+  createdAt DateTime @default(now())
+}
+
+model TeamGoal {
+  id          String        @id @default(cuid())
+  teamId      String
+  team        Team          @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  category    String        @default("project")
+  status      String        @default("active") // "active", "completed", "archived"
+  subgoals    TeamSubGoal[]
+  deadline    String?       // "YYYY-MM-DD"
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+}
+
+model TeamSubGoal {
+  id          String    @id @default(cuid())
+  goalId      String
+  goal        TeamGoal  @relation(fields: [goalId], references: [id], onDelete: Cascade)
+  title       String
+  assignee    String?   // TeamMember name or userId
+  completed   Boolean   @default(false)
+  targetDate  String?   // "YYYY-MM-DD"
+  completedAt DateTime?
+  createdAt   DateTime  @default(now())
+}
