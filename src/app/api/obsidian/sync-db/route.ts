@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { syncVaultToDatabase } from '../../../../../.zscripts/sync-vault';
+import { syncVaultToDatabase } from '@/engine/vault-sync';
 
 export async function POST(request: Request) {
   try {
