@@ -14,12 +14,11 @@ import { YAMLViewer } from '@/components/yaml-viewers/index';
 import {
   aggregateModuleData,
   generateModuleExportMarkdown,
+  extractSubjectCodesFromArtifacts,
   SUBJECT_METADATA,
   ModuleSummaryData,
   ModuleArtifact
 } from '@/engine/module-exporter';
-
-import { FEATURE_MAP_REGISTRY } from '@/engine/feature-map-registry';
 
 export function TacticalKnowledgeBase() {
   const [yamlRecords, setYamlRecords] = useState<any[]>([]);
@@ -193,7 +192,7 @@ export function TacticalKnowledgeBase() {
     fetchKnowledgeData();
   }, []);
 
-  // Combine YAML records from disk AND Zustand memory store into unified artifact list
+  // Combine YAML records from disk, Zustand memory store, and Obsidian notes into unified artifact list
   const allArtifacts = useMemo(() => {
     const memoryItems: any[] = [];
 
@@ -212,6 +211,23 @@ export function TacticalKnowledgeBase() {
             }
           });
         }
+      });
+    }
+
+    if (Array.isArray(obsidianNotes)) {
+      obsidianNotes.forEach((n) => {
+        memoryItems.push({
+          file: n.path.split(/[/\\]/).pop() || n.title,
+          path: n.path,
+          relativePath: n.path,
+          type: 'markdown_note',
+          data: {
+            title: n.title,
+            tags: n.tags,
+            contentSnippet: n.summarySnippet,
+          },
+          source: 'obsidian',
+        });
       });
     }
 
@@ -239,33 +255,19 @@ export function TacticalKnowledgeBase() {
         r.data?.topic ||
         r.data?.subject ||
         r.data?.topic_id ||
-        r.file.replace(/\.(yaml|yml|md)$/, ''),
+        (r.file ? r.file.replace(/\.(yaml|yml|md)$/, '') : 'Untitled'),
       type: r.type || 'unknown',
-      source: r.relativePath || r.file,
+      source: r.relativePath || r.file || r.path,
       filePath: r.path,
-      relativePath: r.relativePath || r.file,
+      relativePath: r.relativePath || r.file || r.path,
       data: r.data,
-      file: r.file,
+      file: r.file || r.path,
     }));
-  }, [yamlRecords, yamlStates]);
+  }, [yamlRecords, yamlStates, obsidianNotes]);
 
   // Dynamically extract subject codes from artifacts and feature map registry
   const availableSubjectCodes = useMemo(() => {
-    const codes = new Set<string>();
-
-    Object.keys(FEATURE_MAP_REGISTRY).forEach((code) => codes.add(code.toLowerCase()));
-
-    allArtifacts.forEach((art) => {
-      if (art.data?.subject_code) codes.add(art.data.subject_code.toLowerCase());
-      if (art.data?.code) codes.add(art.data.code.toLowerCase());
-      const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
-      const match = pathLower.match(/assessments\/([^\/]+)/);
-      if (match && match[1] && !match[1].startsWith('_')) {
-        codes.add(match[1]);
-      }
-    });
-
-    return Array.from(codes);
+    return extractSubjectCodesFromArtifacts(allArtifacts);
   }, [allArtifacts]);
 
   // Aggregate all modules into ModuleSummaryData objects

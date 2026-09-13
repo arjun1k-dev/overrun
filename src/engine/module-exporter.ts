@@ -45,48 +45,110 @@ export const SUBJECT_METADATA: Record<string, { name: string; icon: string; desc
   system: { name: 'System Telemetry & Settings', icon: '⚙️', description: 'Runtime state persistence, session logs, goals, and setup instructions.' },
 };
 
+export function isArtifactForSubject(art: ModuleArtifact, targetCode: string): boolean {
+  const code = targetCode.toLowerCase();
+  const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
+  const fileName = (art.file || '').toLowerCase();
+  const data = art.data || {};
+
+  // 1. Explicit data properties
+  if (data.subject_code && String(data.subject_code).toLowerCase() === code) return true;
+  if (data.subject && String(data.subject).toLowerCase() === code) return true;
+  if (data.code && String(data.code).toLowerCase() === code) return true;
+  if (data.module && String(data.module).toLowerCase() === code) return true;
+
+  // 2. Topic prefix match
+  const topicStr = String(data.topic || data.topic_id || '').toLowerCase();
+  if (topicStr.startsWith(`${code}_`) || topicStr.startsWith(`${code}:`) || topicStr.startsWith(`${code}-`) || topicStr.startsWith(`${code} `)) {
+    return true;
+  }
+
+  // 3. Path matching (e.g. dsa/notes.md, assessments/dsa/..., imported/quiz_result_dsa...)
+  if (pathLower.startsWith(`${code}/`) || pathLower.includes(`/${code}/`) || pathLower.startsWith(`assessments/${code}`)) return true;
+  if (pathLower.includes(`quiz_result_${code}`) || pathLower.includes(`progress_state:${code}`) || pathLower.includes(`progress_state_${code}`)) return true;
+
+  // 4. File name matching
+  if (fileName.startsWith(`${code}_`) || fileName.startsWith(`${code}-`) || fileName.includes(`_${code}_`) || fileName.includes(`-${code}-`)) return true;
+  if (fileName === `${code}.md` || fileName === `${code}.yaml` || fileName === `${code}.yml`) return true;
+
+  // 5. Feature map match
+  if ((art.type === 'feature_map' || data.type === 'feature_map') && (fileName.includes(code) || pathLower.includes(code))) return true;
+
+  return false;
+}
+
+export function extractSubjectCodesFromArtifacts(allArtifacts: ModuleArtifact[]): string[] {
+  const codes = new Set<string>();
+
+  // 1. Auto-register all feature maps across all artifacts first
+  allArtifacts.forEach((art) => {
+    if (art.type === 'feature_map' || art.data?.type === 'feature_map') {
+      const artCode = (art.data?.code || art.data?.subject_code || art.data?.subject || '').toLowerCase();
+      if (artCode) {
+        registerCustomFeatureMap(artCode, art.data);
+      }
+    }
+  });
+
+  // 2. Add all registered feature map codes
+  Object.keys(FEATURE_MAP_REGISTRY).forEach((code) => codes.add(code.toLowerCase()));
+
+  // 3. Scan all artifacts for subject indicators
+  allArtifacts.forEach((art) => {
+    const data = art.data || {};
+    if (data.subject_code) codes.add(String(data.subject_code).toLowerCase());
+    if (data.subject) codes.add(String(data.subject).toLowerCase());
+    if (data.code && art.type !== 'markdown_note') codes.add(String(data.code).toLowerCase());
+    if (data.module) codes.add(String(data.module).toLowerCase());
+
+    const pathLower = (art.relativePath || art.filePath || art.file || '').toLowerCase();
+    
+    // Check path for subject folders (e.g. dsa/notes.md or assessments/dsa/...)
+    const parts = pathLower.split(/[/\\]/);
+    parts.forEach((p) => {
+      if (p && !['assessments', 'imported', 'memory', 'tutorial', 'plans', '.state', 'node_modules', 'public'].includes(p)) {
+        if (!p.includes('.')) {
+          codes.add(p);
+        }
+      }
+    });
+
+    const quizMatch = pathLower.match(/quiz_result_([a-z0-9]+)/);
+    if (quizMatch && quizMatch[1]) codes.add(quizMatch[1]);
+  });
+
+  return Array.from(codes).filter((c) => c && c !== 'system' && c !== 'overrun' && c.length <= 20);
+}
+
 /**
  * Aggregates all raw knowledge records for a subject code into a single ModuleSummaryData object
  */
 export function aggregateModuleData(code: string, allArtifacts: ModuleArtifact[]): ModuleSummaryData {
-  const meta = SUBJECT_METADATA[code] || { name: code.toUpperCase(), icon: '📁', description: `${code.toUpperCase()} knowledge module.` };
-  const featureMap = getSubjectFeatureMap(code);
-  
-  // Filter artifacts belonging strictly to this module
-  const moduleArtifacts = allArtifacts.filter((art) => {
-    const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
-    const fileName = (art.file || '').toLowerCase();
+  const targetCode = code.toLowerCase();
+  const meta = SUBJECT_METADATA[targetCode] || { name: targetCode.toUpperCase(), icon: '📁', description: `${targetCode.toUpperCase()} knowledge module.` };
 
-    // Special handling for system and overrun modules
-    if (code === 'system') {
+  // Auto-register feature maps
+  allArtifacts.forEach((art) => {
+    if (art.type === 'feature_map' || art.data?.type === 'feature_map') {
+      const artCode = (art.data?.code || art.data?.subject_code || art.data?.subject || '').toLowerCase();
+      if (artCode) {
+        registerCustomFeatureMap(artCode, art.data);
+      }
+    }
+  });
+
+  // Filter artifacts belonging to this module
+  const moduleArtifacts = allArtifacts.filter((art) => {
+    if (targetCode === 'system') {
+      const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
       return pathLower.includes('.state') || pathLower.endsWith('readme.md') || pathLower.includes('notebook_lm_instructions');
     }
-    if (code === 'overrun') {
+    if (targetCode === 'overrun') {
+      const pathLower = (art.relativePath || art.filePath || '').toLowerCase();
       return pathLower.includes('projects/overrun') || pathLower.includes('overrun');
     }
 
-    // For academic subjects, use EXACT path matching - no more includes()
-    const expectedPrefix = `assessments/${code}/`;
-    const expectedIndexPrefix = `assessments/_Index_${code}`;
-
-    // ONLY include files that start with the exact subject directory
-    if (pathLower.startsWith(expectedPrefix) || pathLower.startsWith(expectedIndexPrefix)) {
-      return true;
-    }
-
-    // ONLY include feature maps that are exactly for this subject
-    if (fileName === `${code}-feature-map.md` || fileName === `${code}-feature-map.yaml`) {
-      return true;
-    }
-
-    // ONLY include memory items that were explicitly saved to this subject
-    if (pathLower.startsWith(`imported/quiz_result_${code}`) ||
-        pathLower.startsWith(`imported/progress_state:${code}`)) {
-      return true;
-    }
-
-    // REJECT everything else
-    return false;
+    return isArtifactForSubject(art, targetCode);
   });
 
   let totalQuizzes = 0;
