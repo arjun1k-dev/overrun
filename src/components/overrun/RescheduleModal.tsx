@@ -17,6 +17,7 @@ export function RescheduleModal({ task, onConfirm, onClose }: Props) {
   const [suggestion, setSuggestion] = useState<{ s: string; e: string } | null>(null);
 
   const activeDate = useStore((s) => s.activeDate);
+  const collegeSchedule = useStore((s) => s.collegeSchedule);
   const dow = useMemo(() => getDayOfWeekFromDate(new Date(activeDate + 'T00:00:00')), [activeDate]);
   const dur = useMemo(() => timeToMinutes(task.end) - timeToMinutes(task.start), [task]);
   const newStart = useMemo(() => minutesToTime(timeToMinutes(task.start) + offset * 60), [task, offset]);
@@ -24,7 +25,7 @@ export function RescheduleModal({ task, onConfirm, onClose }: Props) {
   const valid = useMemo(() => { const s = timeToMinutes(newStart); const e = timeToMinutes(newEnd); return s >= 360 && e <= 1440 && s < e; }, [newStart, newEnd]);
 
   const handleSmart = () => {
-    const g = findAvailableGap(dow, dur, 0, timeToMinutes(task.start)) ?? findAvailableGap(dow, dur, timeToMinutes(task.end));
+    const g = findAvailableGap(collegeSchedule, dow, dur, 0, timeToMinutes(task.start)) ?? findAvailableGap(collegeSchedule, dow, dur, timeToMinutes(task.end));
     if (g) setSuggestion({ s: minutesToTime(g.start), e: minutesToTime(g.end) });
     playClick();
   };

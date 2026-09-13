@@ -14,6 +14,7 @@ import { transformYaml } from '@/engine/yaml-transformer';
 import { YAMLViewer } from '@/components/yaml-viewers/index';
 import { useStore } from '@/store/useStore';
 import { registerCustomFeatureMap } from '@/engine/feature-map-registry';
+import { CollegeScheduleImporter } from './CollegeScheduleImporter';
 
 interface ImportStage {
   id: 'paste' | 'validate' | 'transform' | 'complete';
@@ -393,6 +394,16 @@ export function TacticalYamlImport({ onNavigate }: TacticalYamlImportProps) {
 
   return (
     <div className="space-y-6">
+      {/* 🎓 College Schedule Importer */}
+      <CollegeScheduleImporter />
+
+      {/* Divider */}
+      <div className="flex items-center gap-3">
+        <div className="flex-1 h-px bg-tactical-border" />
+        <span className="text-xs font-mono text-tactical-muted uppercase tracking-wider">YAML & Data Import</span>
+        <div className="flex-1 h-px bg-tactical-border" />
+      </div>
+
       {/* 🧭 Guided Workflow Banner & System Prompt Quick Copy */}
       <div className="tactical-card p-5 border-l-4 border-l-tactical-primary">
         <div className="flex items-center justify-between">

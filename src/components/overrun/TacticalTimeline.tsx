@@ -31,7 +31,6 @@ export function TacticalTimeline() {
   const skipTask = useStore((s) => s.skipTask);
   const importTasks = useStore((s) => s.importTasks);
   const setActiveDate = useStore((s) => s.setActiveDate);
-  const seedPhase1Timeline = useStore((s) => s.seedPhase1Timeline);
 
   useEffect(() => {
     const updateNow = () => {
@@ -45,20 +44,6 @@ export function TacticalTimeline() {
 
   const tasksToday = tasksByDate[activeDate] || [];
 
-  const [syncedPhase1, setSyncedPhase1] = useState(false);
-
-  useEffect(() => {
-    const today = getTodayKey();
-    if (!tasksByDate[today] || tasksByDate[today].length === 0 || Object.keys(tasksByDate).length < 5) {
-      seedPhase1Timeline();
-    }
-  }, [tasksByDate, seedPhase1Timeline]);
-
-  const handleSyncPhase1 = () => {
-    seedPhase1Timeline();
-    setSyncedPhase1(true);
-    setTimeout(() => setSyncedPhase1(false), 2000);
-  };
 
   // Convert real store tasks into spacious timeline blocks
   const blocks = useMemo(() => {
@@ -270,14 +255,6 @@ export function TacticalTimeline() {
               </button>
             )}
 
-            <button
-              onClick={handleSyncPhase1}
-              className="px-3 py-1.5 rounded-lg text-xs font-mono flex items-center gap-1.5 transition-all bg-purple-500/20 text-purple-400 border border-purple-500/40 hover:border-purple-400 font-bold"
-              title="Force Sync / Re-seed Phase 1 Timeline Tasks"
-            >
-              <Zap className="w-3.5 h-3.5" />
-              {syncedPhase1 ? 'Phase 1 Timeline Synced!' : 'Sync Phase 1 Schedule'}
-            </button>
 
             <button
               onClick={handleExportSnapshot}

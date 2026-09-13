@@ -6,6 +6,7 @@ export type DayOfWeek = 'MON' | 'TUE' | 'WED' | 'THU' | 'FRI' | 'SAT' | 'SUN';
 export type TaskType = 'A' | 'B' | 'C';
 
 export interface CollegeBlock {
+  day: DayOfWeek;  // which day of week this block belongs to
   start: string;   // "HH:MM"
   end: string;     // "HH:MM"
   name: string;

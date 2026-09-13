@@ -78,7 +78,7 @@ graph TD
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/YOUR_USERNAME/overrun.git
+git clone https://github.com/arjun1k-dev/overrun.git
 cd overrun
 ```
 
@@ -100,22 +100,6 @@ npx prisma db push
 npm run dev
 # App will start on http://localhost:3000
 ```
-
----
-
-## Deployment
-
-### Hosting on Cloudflare Pages (Recommended)
-
-1. Push your repository to **GitHub**.
-2. Open **[Cloudflare Dashboard](https://dash.cloudflare.com/)** -> **Workers & Pages**.
-3. Select **Create Application** -> **Pages** -> **Connect to Git**.
-4. Choose the `overrun` repository.
-5. Configure Build Settings:
-   - **Framework Preset**: `Next.js`
-   - **Build Command**: `npm run build`
-   - **Build Output Directory**: `.next`
-6. Click **Save and Deploy**.
 
 ---
 

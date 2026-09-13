@@ -71,6 +71,7 @@ export function Timeline() {
   const memoryGoals = useStore((s) => s.memoryGoals);
   const obsidianNotes = useStore((s) => s.obsidianNotes);
   const rescheduleTask = useStore((s) => s.rescheduleTask);
+  const collegeSchedule = useStore((s) => s.collegeSchedule);
   const [currentTimeLine, setCurrentTimeLine] = useState<number | null>(null);
   const [showCompleted, setShowCompleted] = useState(true);
   const [copiedTimeline, setCopiedTimeline] = useState(false);
@@ -81,7 +82,7 @@ export function Timeline() {
   const hasAutoScrolledRef = useRef(false);
 
   const dayOfWeek: DayOfWeek = useMemo(() => getDayOfWeekFromDate(new Date(activeDate + 'T00:00:00')), [activeDate]);
-  const collegeBlocks = useMemo(() => getCollegeBlocksForDay(dayOfWeek), [dayOfWeek]);
+  const collegeBlocks = useMemo(() => getCollegeBlocksForDay(collegeSchedule, dayOfWeek), [collegeSchedule, dayOfWeek]);
   const tasks: TaskInstance[] = useMemo(() => tasksByDate[activeDate] ?? [], [tasksByDate, activeDate]);
 
   const blocks = useMemo((): TimelineBlock[] => {
@@ -140,7 +141,7 @@ export function Timeline() {
     for (const [dk, insts] of Object.entries(tasksByDate)) {
       allParsed[dk] = insts;
     }
-    const prompt = generateTimelinePrompt({ tasksByDate: allParsed, memoryGoals, obsidianNotes });
+    const prompt = generateTimelinePrompt({ tasksByDate: allParsed, memoryGoals, obsidianNotes, collegeSchedule });
     try {
       await navigator.clipboard.writeText(prompt);
       setCopiedTimeline(true);

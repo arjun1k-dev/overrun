@@ -19,6 +19,7 @@ export function Dropzone() {
   const importTasks = useStore((s) => s.importTasks);
   const addTasks = useStore((s) => s.addTasks);
   const clearDayTasks = useStore((s) => s.clearDayTasks);
+  const collegeSchedule = useStore((s) => s.collegeSchedule);
 
   const getActiveDayOfWeek = useCallback((): DayOfWeek => getDayOfWeekFromDate(new Date(activeDate + 'T00:00:00')), [activeDate]);
 
@@ -26,7 +27,7 @@ export function Dropzone() {
     if (!rawText.trim()) return;
     setIsParsing(true);
     setTimeout(() => {
-      const result = parseSchedule(rawText, getActiveDayOfWeek(), activeDate);
+      const result = parseSchedule(rawText, getActiveDayOfWeek(), activeDate, [], collegeSchedule);
       setParseResult(result); setIsParsing(false);
       if (result.parseErrors.length > 0) { playError(); } else { playClick(); }
     }, 150);

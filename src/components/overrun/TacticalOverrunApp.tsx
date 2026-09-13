@@ -4,8 +4,7 @@ import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Target, Calendar, Brain, FileText,
-  Home, Settings, Bell, User,
-  ChevronRight, Activity, Zap, Sparkles
+  Home, ChevronRight, Activity, Sparkles
 } from 'lucide-react';
 import { TacticalDashboard } from './TacticalDashboard';
 import { TacticalTimeline } from './TacticalTimeline';
@@ -35,7 +34,6 @@ const TABS: TabConfig[] = [
 export function TacticalOverrunApp() {
   const [activeTab, setActiveTab] = useState<Tab>('dashboard');
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [notifications, setNotifications] = useState(3);
   const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
   useEffect(() => {
@@ -123,7 +121,7 @@ export function TacticalOverrunApp() {
               })}
             </div>
 
-            {/* Right Actions - Responsive */}
+            {/* Right Actions */}
             <div className="flex items-center gap-2 md:gap-4">
               {/* Tutorial Button */}
               <button
@@ -132,26 +130,6 @@ export function TacticalOverrunApp() {
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">Tutorial</span>
-              </button>
-
-              {/* Notifications - Hidden on smallest screens */}
-              <button className="relative p-1.5 md:p-2 rounded-lg hover:bg-tactical-deep/50 transition-all hidden sm:block">
-                <Bell className="w-4 h-4 md:w-5 md:h-5 text-tactical-muted" />
-                {notifications > 0 && (
-                  <span className="absolute -top-1 -right-1 w-4 h-4 md:w-5 md:h-5 bg-tactical-danger rounded-full text-[10px] md:text-xs text-white flex items-center justify-center font-medium">
-                    {notifications}
-                  </span>
-                )}
-              </button>
-
-              {/* Settings - Hidden on mobile */}
-              <button className="p-2 rounded-lg hover:bg-tactical-deep/50 transition-all hidden sm:block">
-                <Settings className="w-5 h-5 text-tactical-muted" />
-              </button>
-
-              {/* User - Smaller on mobile */}
-              <button className="w-8 h-8 md:w-10 md:h-10 rounded-lg bg-gradient-to-br from-tactical-purple to-tactical-primary flex items-center justify-center">
-                <User className="w-4 h-4 md:w-5 md:h-5 text-white" />
               </button>
             </div>
           </div>
@@ -242,12 +220,6 @@ export function TacticalOverrunApp() {
         </AnimatePresence>
       </div>
 
-      {/* Quick Action FAB (Mobile) */}
-      <div className="md:hidden fixed bottom-20 right-4 z-40">
-        <button className="w-14 h-14 rounded-full bg-gradient-to-br from-tactical-primary to-tactical-purple flex items-center justify-center shadow-lg shadow-tactical-primary/30">
-          <Zap className="w-6 h-6 text-white" />
-        </button>
-      </div>
 
       {/* First-Timers Onboarding Tutorial Modal */}
       <TutorialModal

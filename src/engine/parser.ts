@@ -2,9 +2,8 @@
 // OVERRUN — Schedule Parser Engine
 // ============================================================
 
-import type { ParsedTask, TaskInstance, DayOfWeek, TaskType, MemoryGoal, ObsidianNoteSummary } from '@/data/types';
+import type { ParsedTask, TaskInstance, DayOfWeek, TaskType, MemoryGoal, ObsidianNoteSummary, CollegeBlock } from '@/data/types';
 import { timeToMinutes, isTimePast, isDatePast, minutesToTime, getDayOfWeekFromDate } from '@/data/types';
-import { COEP_SCHEDULE } from '@/data/coepSchedule';
 
 // Regex supports optional [DATE::YYYY-MM-DD] and optional [DEADLINE::...]
 const SCHEDULE_REGEX =
@@ -42,14 +41,18 @@ function parseLine(line: string, index: number, defaultDateKey: string): ParsedT
 
 /**
  * Check if a task's time range collides with any college block on a given day.
+ * Accepts the user's own schedule (from the store) rather than a hardcoded one.
  */
-function checkCollision(task: ParsedTask, day: DayOfWeek): { collides: boolean; with?: string } {
-  const collegeBlocks = COEP_SCHEDULE[day] ?? [];
+function checkCollision(
+  task: ParsedTask,
+  day: DayOfWeek,
+  schedule: CollegeBlock[]
+): { collides: boolean; with?: string } {
+  const dayBlocks = schedule.filter((b) => b.day === day && !b.isBreak);
   const taskStartMin = timeToMinutes(task.start);
   const taskEndMin = timeToMinutes(task.end);
 
-  for (const block of collegeBlocks) {
-    if (block.isBreak) continue;
+  for (const block of dayBlocks) {
     const blockStartMin = timeToMinutes(block.start);
     const blockEndMin = timeToMinutes(block.end);
 
@@ -98,7 +101,8 @@ export function parseSchedule(
   rawText: string,
   defaultDay: DayOfWeek,
   defaultDateKey: string,
-  existingTasks: ParsedTask[] = []
+  existingTasks: ParsedTask[] = [],
+  collegeSchedule: CollegeBlock[] = []
 ): ParseResult {
   const lines = rawText.split('\n');
   const validTasks: ParsedTask[] = [];
@@ -138,7 +142,7 @@ export function parseSchedule(
     }
 
     // Check college collision (for the task's own date)
-    const collision = checkCollision(task, taskDay);
+    const collision = checkCollision(task, taskDay, collegeSchedule);
     if (collision.collides) {
       task.isValid = false;
       task.collisionWith = collision.with;
@@ -200,9 +204,10 @@ export function generateTimelinePrompt(options: {
   tasksByDate: Record<string, (ParsedTask | TaskInstance)[]>;
   memoryGoals: MemoryGoal[];
   obsidianNotes?: ObsidianNoteSummary[];
+  collegeSchedule?: CollegeBlock[];
   onlyFuture?: boolean;
 }): string {
-  const { tasksByDate, memoryGoals, obsidianNotes = [], onlyFuture = true } = options;
+  const { tasksByDate, memoryGoals, obsidianNotes = [], collegeSchedule = [], onlyFuture = true } = options;
   const now = new Date();
   const currentTimeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
   const currentMin = now.getHours() * 60 + now.getMinutes();
@@ -234,12 +239,11 @@ export function generateTimelinePrompt(options: {
   // ---- WEEKLY COLLEGE SCHEDULE ----
   prompt += `\n========== WEEKLY COLLEGE SCHEDULE ==========\n`;
   for (const dow of DAYS) {
-    const blocks = COEP_SCHEDULE[dow];
-    const nonBreak = blocks.filter((b) => !b.isBreak);
-    if (nonBreak.length === 0) {
+    const blocks = collegeSchedule.filter((b) => b.day === dow && !b.isBreak);
+    if (blocks.length === 0) {
       prompt += `${dow}: (no classes)\n`;
     } else {
-      const slots = nonBreak.map((b) => `${b.start}–${b.end} ${b.name}`).join(', ');
+      const slots = blocks.map((b) => `${b.start}–${b.end} ${b.name}`).join(', ');
       prompt += `${dow}: ${slots}\n`;
     }
   }
@@ -290,10 +294,10 @@ export function generateTimelinePrompt(options: {
     prompt += `\n--- ${dk} (${dow})${isToday ? ' ★ TODAY' : ''} ---\n`;
 
     // College blocks for this day
-    const collegeBlocks = (COEP_SCHEDULE[dow] ?? []).filter((b) => !b.isBreak);
-    if (collegeBlocks.length > 0) {
+    const dayCollegeBlocks = collegeSchedule.filter((b) => b.day === dow && !b.isBreak);
+    if (dayCollegeBlocks.length > 0) {
       prompt += `  College: `;
-      prompt += collegeBlocks.map((b) => `${b.start}–${b.end} ${b.name}`).join(' | ');
+      prompt += dayCollegeBlocks.map((b) => `${b.start}–${b.end} ${b.name}`).join(' | ');
       prompt += '\n';
     }
 
@@ -310,7 +314,7 @@ export function generateTimelinePrompt(options: {
 
     // Calculate free gaps
     const occupied: { startMin: number; endMin: number }[] = [];
-    for (const b of COEP_SCHEDULE[dow] ?? []) {
+    for (const b of collegeSchedule.filter((cb) => cb.day === dow)) {
       occupied.push({ startMin: timeToMinutes(b.start), endMin: timeToMinutes(b.end) });
     }
     for (const t of existingTasks) {

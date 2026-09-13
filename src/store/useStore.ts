@@ -4,17 +4,17 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { TaskInstance, EODSummary, DayOfWeek, TaskStatus, ParsedTask, MemoryGoal, SubGoal, GoalCategory, GoalStatus, ObsidianVaultConfig, ObsidianNoteSummary } from '@/data/types';
+import type { TaskInstance, EODSummary, DayOfWeek, TaskStatus, ParsedTask, MemoryGoal, SubGoal, GoalCategory, GoalStatus, ObsidianVaultConfig, ObsidianNoteSummary, CollegeBlock } from '@/data/types';
 import { timeToMinutes, getTodayKey, getDayOfWeekFromDate, getDateKey } from '@/data/types';
 import type { SchemaType } from '@/engine/schema-registry';
-
-import { generatePhase1Tasks } from '@/engine/phase1-timeline-seeder';
 
 interface OverrunState {
   // ---- Task Management ----
   tasksByDate: Record<string, TaskInstance[]>;
   activeDate: string; // "YYYY-MM-DD"
-  seedPhase1Timeline: () => void;
+
+  // ---- College Schedule (user-owned, persisted) ----
+  collegeSchedule: CollegeBlock[];
 
   // ---- Time Bank ----
   timeBank: number;
@@ -50,6 +50,10 @@ interface OverrunState {
   clearDayTasks: (dateKey: string) => void;
   saveEODSummary: (dateKey: string, summary: string, taskNames: string[]) => void;
 
+  // College Schedule actions
+  setCollegeSchedule: (blocks: CollegeBlock[]) => void;
+  clearCollegeSchedule: () => void;
+
   // Memory Base actions
   addMemoryGoal: (goal: Omit<MemoryGoal, 'id' | 'createdAt' | 'status'>) => void;
   updateMemoryGoal: (id: string, updates: Partial<MemoryGoal>) => void;
@@ -81,6 +85,7 @@ export const useStore = create<OverrunState>()(
     (set, get) => ({
       tasksByDate: {},
       activeDate: getTodayKey(),
+      collegeSchedule: [],
       timeBank: 0,
       dailyTimeBank: {},
       eodSummaries: [],
@@ -99,15 +104,9 @@ export const useStore = create<OverrunState>()(
 
       setActiveDate: (dateKey) => set({ activeDate: dateKey }),
 
-      seedPhase1Timeline: () => {
-        const seeded = generatePhase1Tasks('2026-09-12', '2026-12-04');
-        set((state) => ({
-          tasksByDate: {
-            ...state.tasksByDate,
-            ...seeded,
-          },
-        }));
-      },
+      // ---- College Schedule ----
+      setCollegeSchedule: (blocks) => set({ collegeSchedule: blocks }),
+      clearCollegeSchedule: () => set({ collegeSchedule: [] }),
 
       importTasks: (dateKey, parsedTasks) => {
         const newInstances: TaskInstance[] = parsedTasks.map((pt) => ({
@@ -183,7 +182,7 @@ export const useStore = create<OverrunState>()(
                 : t
             ),
           },
-          timeBank: Math.max(0, s.timeBank + gained), // Prevent negative time bank
+          timeBank: Math.max(0, s.timeBank + gained),
           dailyTimeBank: {
             ...s.dailyTimeBank,
             [dateKey]: (s.dailyTimeBank[dateKey] ?? 0) + gained,
@@ -213,7 +212,7 @@ export const useStore = create<OverrunState>()(
                 : t
             ),
           },
-          timeBank: Math.max(0, s.timeBank - lost), // Prevent negative time bank
+          timeBank: Math.max(0, s.timeBank - lost),
           dailyTimeBank: {
             ...s.dailyTimeBank,
             [dateKey]: (s.dailyTimeBank[dateKey] ?? 0) - lost,
@@ -452,6 +451,7 @@ export const useStore = create<OverrunState>()(
       name: 'overrun-storage',
       partialize: (state) => ({
         tasksByDate: state.tasksByDate,
+        collegeSchedule: state.collegeSchedule,
         timeBank: state.timeBank,
         dailyTimeBank: state.dailyTimeBank,
         eodSummaries: state.eodSummaries,
@@ -464,15 +464,13 @@ export const useStore = create<OverrunState>()(
       }),
       onRehydrateStorage: () => (state) => {
         if (!state) return;
-        // Automatically sanitize and purge legacy personal data from browser storage
-        if (Array.isArray(state.memoryGoals)) {
-          state.memoryGoals = state.memoryGoals.filter(
-            (g) =>
-              !g.id.includes('2cr') &&
-              !g.id.includes('whatsapp') &&
-              !g.title.toLowerCase().includes('2cr') &&
-              !g.title.toLowerCase().includes('whatsapp')
-          );
+        // Ensure collegeSchedule is always an array
+        if (!Array.isArray(state.collegeSchedule)) {
+          state.collegeSchedule = [];
+        }
+        // Ensure memoryGoals is always an array
+        if (!Array.isArray(state.memoryGoals)) {
+          state.memoryGoals = [];
         }
       },
     }
