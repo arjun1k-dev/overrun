@@ -2,7 +2,7 @@
 // OVERRUN — End-to-End Module Context Aggregator & Markdown Exporter
 // ============================================================
 
-import { getSubjectFeatureMap, registerCustomFeatureMap, SubjectFeatureMap } from './feature-map-registry';
+import { getSubjectFeatureMap, registerCustomFeatureMap, SubjectFeatureMap, FEATURE_MAP_REGISTRY } from './feature-map-registry';
 
 export interface ModuleArtifact {
   id: string;
