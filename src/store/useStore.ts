@@ -491,10 +491,11 @@ export const useStore = create<OverrunState>()(
 
       enableDemoMode: () => {
         const state = get();
-        // Only inject demo data if the store is essentially empty
-        if (state.memoryGoals.length > 0 || state.collegeSchedule.length > 0) return;
-
         const today = getTodayKey();
+        
+        // Only inject if demo tasks aren't already loaded for today
+        if (state.tasksByDate[today]?.some(t => t.id === 't1')) return;
+
         const tomorrowDate = new Date();
         tomorrowDate.setDate(tomorrowDate.getDate() + 1);
         const tomorrow = getDateKey(tomorrowDate);
