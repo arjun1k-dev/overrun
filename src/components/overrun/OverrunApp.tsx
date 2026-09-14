@@ -13,7 +13,7 @@ import { KnowledgeLog } from './KnowledgeLog';
 import { MemoryBase } from './MemoryBase';
 import { ObsidianSyncCard } from './ObsidianSyncCard';
 import { playClick, playPop } from '@/engine/sounds';
-import { ClipboardList, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
+import { ClipboardList, BarChart3, ChevronDown, ChevronUp, AlertTriangle } from 'lucide-react';
 import { MasteryTracker } from './MasteryTracker';
 import { SubjectHierarchyTree } from './SubjectHierarchyTree';
 import { YamlImportCard } from './YamlImportCard';
@@ -28,10 +28,16 @@ export function OverrunApp() {
   const loadTasksFromServer = useStore((s) => s.loadTasksFromServer);
 
   const [isMounted, setIsMounted] = useState(false);
+  const [isDemo, setIsDemo] = useState(false);
 
   useEffect(() => {
     setIsMounted(true);
-    loadTasksFromServer();
+    if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
+      setIsDemo(true);
+      useStore.getState().enableDemoMode();
+    } else {
+      loadTasksFromServer();
+    }
   }, [loadTasksFromServer]);
 
   const handleTabChange = (tab: Tab) => { setActiveTab(tab); playClick(); };
@@ -87,6 +93,14 @@ export function OverrunApp() {
 
       {/* Main */}
       <main className="flex-1 max-w-3xl mx-auto w-full px-4 py-6">
+        {isDemo && (
+          <div className="mb-6 bg-[#FFE600] text-black border-4 border-black p-4 rounded-xl shadow-[4px_4px_0px_#000]">
+            <h2 className="text-lg font-black uppercase mb-1 flex items-center gap-2"><AlertTriangle className="w-5 h-5 stroke-[3]"/> Live Demo Mode</h2>
+            <p className="text-sm font-bold font-mono">
+              You are viewing a generic demo with hardcoded mock data. To use the full version with local file persistence, database support, and your own Obsidian Vault, <a href="https://github.com/arjun1k-dev/overrun" target="_blank" rel="noreferrer" className="underline text-blue-700 hover:text-blue-900">download the original from GitHub</a> and run it locally.
+            </p>
+          </div>
+        )}
         <AnimatePresence mode="wait">
           {activeTab === 'schedule' && (
             <motion.div key="schedule" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} className="space-y-6">

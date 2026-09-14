@@ -82,6 +82,9 @@ interface OverrunState {
 
   // Internal
   _updateStreak: () => void;
+  
+  // Demo Mode
+  enableDemoMode: () => void;
 }
 
 export const useStore = create<OverrunState>()(
@@ -484,6 +487,47 @@ export const useStore = create<OverrunState>()(
         } else {
           set({ streak: 1, lastActiveDate: today });
         }
+      },
+
+      enableDemoMode: () => {
+        const state = get();
+        // Only inject demo data if the store is essentially empty
+        if (state.memoryGoals.length > 0 || state.collegeSchedule.length > 0) return;
+
+        const today = getTodayKey();
+        const tomorrowDate = new Date();
+        tomorrowDate.setDate(tomorrowDate.getDate() + 1);
+        const tomorrow = getDateKey(tomorrowDate);
+
+        set({
+          collegeSchedule: [
+            { id: '1', day: 'MON', start: '10:30', end: '12:30', name: 'Design Thinking', isBreak: false, isTravel: false },
+            { id: '2', day: 'MON', start: '13:30', end: '15:30', name: 'NMCP Lab', isBreak: false, isTravel: false },
+            { id: '3', day: 'TUE', start: '09:00', end: '11:00', name: 'Data Structures', isBreak: false, isTravel: false },
+            { id: '4', day: 'WED', start: '11:00', end: '13:00', name: 'Operating Systems', isBreak: false, isTravel: false },
+          ],
+          memoryGoals: [
+            { id: 'g1', title: 'Ace End Semester Exams', category: 'exam', topics: ['Trees', 'Graphs', 'Dynamic Programming'], status: 'active', createdAt: Date.now() },
+            { id: 'g2', title: 'Launch 3 SaaS Products', category: 'project', topics: ['Next.js', 'Postgres', 'Stripe'], status: 'active', createdAt: Date.now() },
+          ],
+          obsidianNotes: [
+            { path: 'Machine Learning Basics.md', title: 'Machine Learning Basics', tags: ['study', 'ml'], headings: ['Supervised Learning', 'Neural Networks'], summarySnippet: 'A comprehensive overview of foundational ML concepts including gradient descent and backpropagation.', lastModified: Date.now() },
+            { path: 'React State Management.md', title: 'React State Management', tags: ['react', 'frontend'], headings: ['Zustand vs Redux', 'Context API'], summarySnippet: 'Analysis of performance characteristics for large React applications using different state management libraries.', lastModified: Date.now() },
+          ],
+          tasksByDate: {
+            ...state.tasksByDate,
+            [today]: [
+              { id: 't1', dateKey: today, start: '08:00', end: '09:30', type: 'A', task: 'Deep Work: System Architecture', status: 'done', actualEnd: '09:30', isValid: true, deadline: `${today} 23:59`, _day: getDayOfWeekFromDate(new Date(today)) as DayOfWeek },
+              { id: 't2', dateKey: today, start: '16:00', end: '17:30', type: 'B', task: 'Memorization: CS Notes', status: 'pending', isValid: true, deadline: `${today} 23:59`, _day: getDayOfWeekFromDate(new Date(today)) as DayOfWeek },
+              { id: 't3', dateKey: today, start: '20:00', end: '21:00', type: 'C', task: 'Chore: Setup Docker Env', status: 'pending', isValid: true, deadline: `${tomorrow} 08:00`, _day: getDayOfWeekFromDate(new Date(today)) as DayOfWeek },
+            ],
+            [tomorrow]: [
+              { id: 't4', dateKey: tomorrow, start: '09:00', end: '11:00', type: 'A', task: 'Deep Work: ML Project', status: 'pending', isValid: true, deadline: `${tomorrow} 23:59`, _day: getDayOfWeekFromDate(new Date(tomorrow)) as DayOfWeek },
+            ]
+          },
+          xp: 1450,
+          streak: 12,
+        });
       },
     }),
     {
