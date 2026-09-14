@@ -27,11 +27,16 @@ export function OverrunApp() {
   const [showTimetableImporter, setShowTimetableImporter] = useState(false);
   const loadTasksFromServer = useStore((s) => s.loadTasksFromServer);
 
+  const [isMounted, setIsMounted] = useState(false);
+
   useEffect(() => {
+    setIsMounted(true);
     loadTasksFromServer();
   }, [loadTasksFromServer]);
 
   const handleTabChange = (tab: Tab) => { setActiveTab(tab); playClick(); };
+
+  if (!isMounted) return null; // Prevent hydration mismatch
 
   return (
     <div className="overrun-root min-h-screen flex flex-col bg-white">
