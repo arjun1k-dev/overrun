@@ -508,8 +508,8 @@ export const useStore = create<OverrunState>()(
             { day: 'WED', start: '11:00', end: '13:00', name: 'Operating Systems', isBreak: false, isTravel: false },
           ],
           memoryGoals: [
-            { id: 'g1', title: 'Ace End Semester Exams', description: 'Score at least 90%', deadline: null, category: 'exam', topics: ['Trees', 'Graphs', 'Dynamic Programming'], status: 'active', createdAt: Date.now() },
-            { id: 'g2', title: 'Launch 3 SaaS Products', description: 'Build and launch products to generate MRR', deadline: null, category: 'project', topics: ['Next.js', 'Postgres', 'Stripe'], status: 'active', createdAt: Date.now() },
+            { id: 'g1', title: 'Ace End Semester Exams', description: 'Score at least 90%', deadline: '', category: 'exam', topics: ['Trees', 'Graphs', 'Dynamic Programming'], status: 'active', createdAt: Date.now() },
+            { id: 'g2', title: 'Launch 3 SaaS Products', description: 'Build and launch products to generate MRR', deadline: '', category: 'project', topics: ['Next.js', 'Postgres', 'Stripe'], status: 'active', createdAt: Date.now() },
           ],
           obsidianNotes: [
             { path: 'Machine Learning Basics.md', title: 'Machine Learning Basics', tags: ['study', 'ml'], headings: ['Supervised Learning', 'Neural Networks'], summarySnippet: 'A comprehensive overview of foundational ML concepts including gradient descent and backpropagation.', lastModified: Date.now() },
@@ -518,12 +518,12 @@ export const useStore = create<OverrunState>()(
           tasksByDate: {
             ...state.tasksByDate,
             [today]: [
-              { id: 't1', dateKey: today, start: '08:00', end: '09:30', type: 'A', task: 'Deep Work: System Architecture', status: 'done', actualEnd: '09:30', isValid: true, deadline: `${today} 23:59` },
-              { id: 't2', dateKey: today, start: '16:00', end: '17:30', type: 'B', task: 'Memorization: CS Notes', status: 'pending', isValid: true, deadline: `${today} 23:59` },
-              { id: 't3', dateKey: today, start: '20:00', end: '21:00', type: 'C', task: 'Chore: Setup Docker Env', status: 'pending', isValid: true, deadline: `${tomorrow} 08:00` },
+              { id: 't1', dateKey: today, start: '08:00', end: '09:30', type: 'A', task: 'Deep Work: System Architecture', status: 'done', actualEnd: '09:30', isValid: true, deadline: `${today} 23:59`, rawLine: '' },
+              { id: 't2', dateKey: today, start: '16:00', end: '17:30', type: 'B', task: 'Memorization: CS Notes', status: 'pending', isValid: true, deadline: `${today} 23:59`, rawLine: '' },
+              { id: 't3', dateKey: today, start: '20:00', end: '21:00', type: 'C', task: 'Chore: Setup Docker Env', status: 'pending', isValid: true, deadline: `${tomorrow} 08:00`, rawLine: '' },
             ],
             [tomorrow]: [
-              { id: 't4', dateKey: tomorrow, start: '09:00', end: '11:00', type: 'A', task: 'Deep Work: ML Project', status: 'pending', isValid: true, deadline: `${tomorrow} 23:59` },
+              { id: 't4', dateKey: tomorrow, start: '09:00', end: '11:00', type: 'A', task: 'Deep Work: ML Project', status: 'pending', isValid: true, deadline: `${tomorrow} 23:59`, rawLine: '' },
             ]
           },
           xp: 1450,
