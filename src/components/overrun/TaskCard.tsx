@@ -93,6 +93,14 @@ export function TaskCard({ task, onReschedule }: TaskCardProps) {
           </span>
           <span className="text-[11px] font-mono font-extrabold" style={{ color: dynamicColor.text }}>{task.start}–{task.end}</span>
           <span className="text-[10px] font-mono font-bold" style={{ color: dynamicColor.text }}>({dur}m)</span>
+          
+          {task.deadline && (
+            <span className="text-[9px] font-mono font-bold bg-white text-black px-1.5 py-0.5 rounded border border-black flex items-center gap-1 shadow-[1px_1px_0px_#000]">
+              <Clock className="w-2.5 h-2.5 stroke-[3]" />
+              {dDate === activeDate ? `DUE ${dTime}` : `DUE ${dDate.slice(5)}`}
+            </span>
+          )}
+
           {!task.isValid && task.collisionWith && (
             <span className="text-[10px] font-mono text-white bg-[#FF007F] px-1.5 py-0.5 rounded border border-black flex items-center gap-1 ml-auto font-black">
               <AlertTriangle className="w-3 h-3 stroke-[3]" /> {task.collisionWith}

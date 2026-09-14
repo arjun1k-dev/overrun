@@ -39,6 +39,10 @@ interface OverrunState {
   yamlStates: Record<string, any>; // type -> data records
   yamlTransformQueue: Array<{ from: SchemaType; to: SchemaType; data: any; context?: any }>;
 
+  // ---- Tasks File Persistence ----
+  syncTasksToServer: () => Promise<void>;
+  loadTasksFromServer: () => Promise<void>;
+
   // ---- Actions ----
   setActiveDate: (dateKey: string) => void;
   importTasks: (dateKey: string, parsedTasks: ParsedTask[]) => void;
@@ -102,6 +106,33 @@ export const useStore = create<OverrunState>()(
       yamlStates: {},
       yamlTransformQueue: [],
 
+      loadTasksFromServer: async () => {
+        try {
+          const res = await fetch('/api/tasks');
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.tasks && Object.keys(data.tasks).length > 0) {
+              set((s) => ({ tasksByDate: { ...s.tasksByDate, ...data.tasks } }));
+            }
+          }
+        } catch (e) {
+          console.error('Failed to load tasks from server', e);
+        }
+      },
+
+      syncTasksToServer: async () => {
+        const state = get();
+        try {
+          await fetch('/api/tasks', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ tasks: state.tasksByDate }),
+          });
+        } catch (e) {
+          console.error('Failed to sync tasks to server', e);
+        }
+      },
+
       setActiveDate: (dateKey) => set({ activeDate: dateKey }),
 
       // ---- College Schedule ----
@@ -121,6 +152,7 @@ export const useStore = create<OverrunState>()(
             [dateKey]: newInstances,
           },
         }));
+        get().syncTasksToServer();
       },
 
       addTasks: (parsedTasks) => {
@@ -136,6 +168,7 @@ export const useStore = create<OverrunState>()(
           }
           return { tasksByDate: updated };
         });
+        get().syncTasksToServer();
       },
 
       markDone: (dateKey, taskId) => {
@@ -156,6 +189,7 @@ export const useStore = create<OverrunState>()(
               ),
             },
           }));
+          get().syncTasksToServer();
           return;
         }
 
@@ -191,6 +225,7 @@ export const useStore = create<OverrunState>()(
         }));
 
         get()._updateStreak();
+        get().syncTasksToServer();
       },
 
       markOvertime: (dateKey, taskId, actualEnd) => {
@@ -221,6 +256,7 @@ export const useStore = create<OverrunState>()(
         }));
 
         get()._updateStreak();
+        get().syncTasksToServer();
       },
 
       skipTask: (dateKey, taskId) => {
@@ -242,6 +278,7 @@ export const useStore = create<OverrunState>()(
           },
           xp: isSkipped ? s.xp : Math.max(0, s.xp - 15),
         }));
+        get().syncTasksToServer();
       },
 
       rescheduleTask: (dateKey, taskId, newStart, newEnd) => {
@@ -253,6 +290,7 @@ export const useStore = create<OverrunState>()(
             ),
           },
         }));
+        get().syncTasksToServer();
       },
 
       clearDayTasks: (dateKey) => {
@@ -262,6 +300,7 @@ export const useStore = create<OverrunState>()(
             [dateKey]: [],
           },
         }));
+        get().syncTasksToServer();
       },
 
       saveEODSummary: (dateKey, summary, taskNames) => {

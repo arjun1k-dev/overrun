@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useStore } from '@/store/useStore';
 import { TimeBankBar } from './TimeBankBar';
 import { DaySelector } from './DaySelector';
 import { Dropzone } from './Dropzone';
@@ -16,12 +17,19 @@ import { ClipboardList, BarChart3, ChevronDown, ChevronUp } from 'lucide-react';
 import { MasteryTracker } from './MasteryTracker';
 import { SubjectHierarchyTree } from './SubjectHierarchyTree';
 import { YamlImportCard } from './YamlImportCard';
+import { CollegeScheduleImporter } from './CollegeScheduleImporter';
 
 type Tab = 'schedule' | 'intel';
 
 export function OverrunApp() {
   const [activeTab, setActiveTab] = useState<Tab>('schedule');
   const [showDropzone, setShowDropzone] = useState(false);
+  const [showTimetableImporter, setShowTimetableImporter] = useState(false);
+  const loadTasksFromServer = useStore((s) => s.loadTasksFromServer);
+
+  useEffect(() => {
+    loadTasksFromServer();
+  }, [loadTasksFromServer]);
 
   const handleTabChange = (tab: Tab) => { setActiveTab(tab); playClick(); };
 
@@ -78,19 +86,36 @@ export function OverrunApp() {
           {activeTab === 'schedule' && (
             <motion.div key="schedule" initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 10 }} transition={{ duration: 0.15 }} className="space-y-6">
               <DaySelector />
-              <div>
-                <motion.button whileTap={{ scale: 0.98 }} onClick={() => { setShowDropzone(!showDropzone); playPop(); }}
-                  className="w-full bg-[#CCFF00] text-black py-3 text-sm font-black rounded-xl border-3 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center gap-2 hover:bg-[#00F0FF] transition-all cursor-pointer">
-                  {showDropzone ? <ChevronUp className="w-4 h-4 stroke-[3]" /> : <ChevronDown className="w-4 h-4 stroke-[3]" />}
-                  {showDropzone ? 'Hide Import Zone' : 'Import AI Schedule'}
-                </motion.button>
-                <AnimatePresence>
-                  {showDropzone && (
-                    <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-4 overflow-hidden">
-                      <div className="max-card p-5"><Dropzone /></div>
-                    </motion.div>
-                  )}
-                </AnimatePresence>
+              <div className="flex gap-2 flex-col sm:flex-row">
+                <div className="flex-1">
+                  <motion.button whileTap={{ scale: 0.98 }} onClick={() => { setShowDropzone(!showDropzone); setShowTimetableImporter(false); playPop(); }}
+                    className="w-full bg-[#CCFF00] text-black py-3 text-sm font-black rounded-xl border-3 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center gap-2 hover:bg-[#00F0FF] transition-all cursor-pointer">
+                    {showDropzone ? <ChevronUp className="w-4 h-4 stroke-[3]" /> : <ChevronDown className="w-4 h-4 stroke-[3]" />}
+                    {showDropzone ? 'Hide Import Zone' : 'Import AI Schedule'}
+                  </motion.button>
+                  <AnimatePresence>
+                    {showDropzone && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-4 overflow-hidden">
+                        <div className="max-card p-5"><Dropzone /></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+                
+                <div className="flex-1">
+                  <motion.button whileTap={{ scale: 0.98 }} onClick={() => { setShowTimetableImporter(!showTimetableImporter); setShowDropzone(false); playPop(); }}
+                    className="w-full bg-[#FF70A6] text-black py-3 text-sm font-black rounded-xl border-3 border-black shadow-[4px_4px_0px_#000] flex items-center justify-center gap-2 hover:bg-[#FF007F] hover:text-white transition-all cursor-pointer">
+                    {showTimetableImporter ? <ChevronUp className="w-4 h-4 stroke-[3]" /> : <ChevronDown className="w-4 h-4 stroke-[3]" />}
+                    {showTimetableImporter ? 'Hide Timetable' : 'Import College Timetable'}
+                  </motion.button>
+                  <AnimatePresence>
+                    {showTimetableImporter && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} exit={{ opacity: 0, height: 0 }} className="mt-4 overflow-hidden">
+                        <div className="max-card p-5"><CollegeScheduleImporter /></div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
               <div className="max-card p-5"><Timeline /></div>
               <div className="max-card p-5"><EODTerminal /></div>
