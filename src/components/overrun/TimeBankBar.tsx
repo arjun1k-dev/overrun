@@ -16,7 +16,7 @@ export function TimeBankBar() {
   return (
     <div className="w-full px-2 py-2 mb-2">
       <div className="flex items-center justify-between mb-2">
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-2 bg-white px-3 py-1 rounded-xl border-3 border-black shadow-[2px_2px_0px_#000]">
             <Timer className="w-4 h-4 text-black stroke-[3]" />
             <span className="text-xs font-mono font-black text-black">TIME BANK:</span>

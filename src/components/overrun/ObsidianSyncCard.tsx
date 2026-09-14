@@ -253,13 +253,20 @@ export function ObsidianSyncCard() {
 
         {/* Quick Actions Bar */}
         <div className="flex items-center justify-between text-xs text-slate-400 pt-1">
-          <button
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="text-purple-400 hover:text-purple-300 font-semibold cursor-pointer flex items-center gap-1.5"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            {showAddForm ? 'Close Form' : '+ Add New Knowledge Note to Vault'}
-          </button>
+          <div className="hidden sm:block">
+            <button
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="text-purple-400 hover:text-purple-300 font-semibold cursor-pointer flex items-center gap-1.5"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              {showAddForm ? 'Close Form' : '+ Add New Knowledge Note to Vault'}
+            </button>
+          </div>
+          <div className="block sm:hidden">
+            <span className="text-slate-500 font-semibold italic flex items-center gap-1">
+              <Plus className="w-3 h-3" /> Add Knowledge (PC Only Feature)
+            </span>
+          </div>
 
           <button
             onClick={handleCreateSampleVault}
