@@ -490,11 +490,11 @@ export const useStore = create<OverrunState>()(
       },
 
       enableDemoMode: () => {
-        const state = get();
         const today = getTodayKey();
-        
-        // Only inject if demo tasks aren't already loaded for today
-        if (state.tasksByDate[today]?.some(t => t.id === 't1')) return;
+
+        // Wipe any stale localStorage so Zustand's persist doesn't rehydrate
+        // old empty/user data over the top of our demo injection.
+        try { localStorage.removeItem('overrun-storage'); } catch { /* SSR guard */ }
 
         const tomorrowDate = new Date();
         tomorrowDate.setDate(tomorrowDate.getDate() + 1);
