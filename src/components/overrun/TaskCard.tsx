@@ -104,6 +104,11 @@ export function TaskCard({ task, onReschedule }: TaskCardProps) {
 
         {!done && task.isValid && (
           <div className="flex items-center gap-1.5 flex-wrap shrink-0 mt-auto pt-1">
+            <motion.button whileTap={{ scale: 0.95 }} onClick={() => { useStore.getState().startActiveSession(task.id, activeDate); playClick(); }}
+              className="max-btn !bg-[#00F0FF] hover:!bg-[#CCFF00] !px-2.5 !py-1 text-[11px] font-black text-black flex items-center gap-1 border-2 border-black shadow-[2px_2px_0px_#000]"
+              title="Start Live Focus Session Timer">
+              <Zap className="w-3 h-3 fill-black stroke-[2]" /> Start
+            </motion.button>
             <motion.button whileTap={{ scale: 0.95 }} onClick={handleDone}
               className="max-btn !bg-white hover:!bg-[#CCFF00] !px-2.5 !py-1 text-[11px] font-black text-black flex items-center gap-1 border-2 border-black shadow-[2px_2px_0px_#000]">
               <Check className="w-3 h-3 stroke-[3]" /> Done
@@ -113,11 +118,12 @@ export function TaskCard({ task, onReschedule }: TaskCardProps) {
               <Clock className="w-3 h-3 stroke-[3]" /> OT
             </motion.button>
             <motion.button whileTap={{ scale: 0.95 }} onClick={() => { setShowReschedule(true); playClick(); }}
-              className="max-btn !bg-[#00F0FF] hover:!bg-[#4CC9F0] !px-2.5 !py-1 text-[11px] font-black text-black flex items-center gap-1 border-2 border-black shadow-[2px_2px_0px_#000]">
-              <RotateCcw className="w-3 h-3 stroke-[3]" /> Shift
+              className="max-btn !bg-[#FFE600] hover:!bg-[#FF9F1C] !px-2 !py-1 text-[11px] font-black text-black flex items-center gap-1 border-2 border-black shadow-[2px_2px_0px_#000]">
+              <RotateCcw className="w-3 h-3 stroke-[3]" />
             </motion.button>
             <motion.button whileTap={{ scale: 0.95 }} onClick={handleSkip}
-              className="max-btn !bg-[#FFE600] hover:!bg-[#FF9F1C] !px-2 !py-1 text-[11px] font-black text-black ml-auto flex items-center gap-1 border-2 border-black shadow-[2px_2px_0px_#000]">
+              className="max-btn !bg-slate-200 hover:!bg-slate-300 !px-2 !py-1 text-[11px] font-black text-black ml-auto flex items-center gap-1 border-2 border-black shadow-[2px_2px_0px_#000]"
+              title="Skip Task">
               <SkipForward className="w-3 h-3 stroke-[3]" />
             </motion.button>
           </div>

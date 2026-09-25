@@ -12,6 +12,8 @@ import {
   Clock, AlertTriangle, ChevronDown, ChevronUp, Tag
 } from 'lucide-react';
 
+import { calculateGoalProgress } from '@/engine/goal-sync-engine';
+
 const CATEGORY_ICONS: Record<GoalCategory, typeof GraduationCap> = {
   exam: GraduationCap,
   internship: Briefcase,
@@ -55,6 +57,7 @@ function GoalCard({ goal }: { goal: MemoryGoal }) {
   const [newTopic, setNewTopic] = useState('');
   const [newSubGoalTitle, setNewSubGoalTitle] = useState('');
 
+  const tasksByDate = useStore((s) => s.tasksByDate);
   const updateMemoryGoal = useStore((s) => s.updateMemoryGoal);
   const deleteMemoryGoal = useStore((s) => s.deleteMemoryGoal);
   const setGoalStatus = useStore((s) => s.setGoalStatus);
@@ -64,14 +67,17 @@ function GoalCard({ goal }: { goal: MemoryGoal }) {
   const toggleSubGoal = useStore((s) => s.toggleSubGoal);
   const deleteSubGoal = useStore((s) => s.deleteSubGoal);
 
+  const completedTasks = Object.values(tasksByDate).flat().filter(t => t.status === 'done' || t.status === 'overtime');
+  const goalProgress = calculateGoalProgress(goal, completedTasks);
+
   const config = GOAL_CATEGORY_CONFIG[goal.category];
   const IconComp = CATEGORY_ICONS[goal.category];
   const isActive = goal.status === 'active';
-  const isCompleted = goal.status === 'completed';
+  const isCompleted = goal.status === 'completed' || goalProgress.calculatedProgressPct >= 100;
 
   const subgoals = goal.subgoals || [];
   const completedSubgoals = subgoals.filter((s) => s.completed);
-  const progressPct = subgoals.length > 0 ? Math.round((completedSubgoals.length / subgoals.length) * 100) : 0;
+  const progressPct = goalProgress.calculatedProgressPct;
 
   const handleComplete = () => { setGoalStatus(goal.id, isCompleted ? 'active' : 'completed'); playClick(); };
   const handleArchive = () => { setGoalStatus(goal.id, 'archived'); playClick(); };

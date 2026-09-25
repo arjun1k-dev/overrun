@@ -21,52 +21,65 @@ export async function POST(request: Request) {
     // Determine relative directory based on schema type
     let subDir = 'imports';
     if (type === 'quiz_result') {
+      const explicitCode = String(data?.subject || data?.code || data?.module || data?.subject_code || '').toLowerCase();
       const topicStr = String(data?.topic || data?.topic_id || '').toLowerCase();
       let moduleFolder = 'general';
 
-      // Try to match topic against feature maps for intelligent routing
-      let bestMatch: string | null = null;
-      let bestMatchScore = 0;
+      if (KNOWN_SUBJECT_CODES.includes(explicitCode)) {
+        moduleFolder = explicitCode;
+      } else {
+        // Try to match topic against feature maps & keywords for intelligent routing
+        let bestMatch: string | null = null;
+        let bestMatchScore = 0;
 
-      for (const code of KNOWN_SUBJECT_CODES) {
-        const featureMap = getSubjectFeatureMap(code);
-        if (featureMap && featureMap.features.length > 0) {
-          // Score this subject based on how well the topic matches its features
-          let matchScore = 0;
-          featureMap.features.forEach(feature => {
-            const featureName = feature.name.toLowerCase();
-            const featureId = feature.id.toLowerCase();
-
-            // Clean topic string by removing common prefixes
-            const cleanTopic = topicStr.replace(/^(circuit quiz:|quiz:|exam:|test:|practice:)\s*/i, '').trim();
-
-            // Exact matches get highest score
-            if (cleanTopic === featureName || cleanTopic === featureId) {
-              matchScore += 100;
-            }
-            // Contains matches get medium score (check both directions)
-            else if (cleanTopic.includes(featureName) || featureName.includes(cleanTopic)) {
-              matchScore += 50;
-            }
-            // Partial ID matches get low score
-            else if (cleanTopic.includes(featureId) || featureId.includes(cleanTopic)) {
-              matchScore += 25;
-            }
-            // Check for key terms in topic
-            else if (featureName.split('&').some((term: string) => cleanTopic.includes(term.trim()))) {
-              matchScore += 30;
-            }
-          });
-
-          if (matchScore > bestMatchScore) {
-            bestMatchScore = matchScore;
+        for (const code of KNOWN_SUBJECT_CODES) {
+          if (topicStr.includes(code)) {
             bestMatch = code;
+            bestMatchScore = 200;
+            break;
+          }
+
+          const featureMap = getSubjectFeatureMap(code);
+          if (featureMap && featureMap.features.length > 0) {
+            let matchScore = 0;
+            const cleanTopic = topicStr.replace(/^(circuit quiz:|quiz:|exam:|test:|practice:)\s*/i, '').trim();
+            const topicWords = cleanTopic.split(/[^a-z0-9]+/i).filter(w => w.length > 2);
+
+            featureMap.features.forEach(feature => {
+              const featureName = feature.name.toLowerCase();
+              const featureId = feature.id.toLowerCase();
+
+              if (cleanTopic === featureName || cleanTopic === featureId) {
+                matchScore += 100;
+              } else if (cleanTopic.includes(featureName) || featureName.includes(cleanTopic)) {
+                matchScore += 50;
+              } else if (cleanTopic.includes(featureId) || featureId.includes(cleanTopic)) {
+                matchScore += 25;
+              } else {
+                // Word token overlap
+                const featureWords = (featureName + ' ' + featureId).split(/[^a-z0-9]+/i).filter(w => w.length > 2);
+                let sharedWords = 0;
+                topicWords.forEach(tw => {
+                  if (featureWords.some(fw => fw.includes(tw) || tw.includes(fw))) {
+                    sharedWords++;
+                  }
+                });
+                if (sharedWords > 0) {
+                  matchScore += sharedWords * 15;
+                }
+              }
+            });
+
+            if (matchScore > bestMatchScore) {
+              bestMatchScore = matchScore;
+              bestMatch = code;
+            }
           }
         }
-      }
 
-      if (bestMatch && bestMatchScore >= 50) {
-        moduleFolder = bestMatch;
+        if (bestMatch && bestMatchScore > 0) {
+          moduleFolder = bestMatch;
+        }
       }
 
       subDir = `assessments/${moduleFolder}`;

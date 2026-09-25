@@ -74,27 +74,51 @@ export function aggregateModuleData(code: string, allArtifacts: ModuleArtifact[]
       return pathLower.includes('projects/overrun') || pathLower.includes('overrun');
     }
 
-    // For academic subjects, use EXACT path matching - no more includes()
+    // Check explicit subject markers in data
+    const explicitSubject = String(art.data?.subject || art.data?.code || art.data?.module || art.data?.subject_code || '').toLowerCase();
+    if (explicitSubject === code) {
+      return true;
+    }
+
+    // For academic subjects, check path prefix
     const expectedPrefix = `assessments/${code}/`;
     const expectedIndexPrefix = `assessments/_Index_${code}`;
 
-    // ONLY include files that start with the exact subject directory
     if (pathLower.startsWith(expectedPrefix) || pathLower.startsWith(expectedIndexPrefix)) {
       return true;
     }
 
-    // ONLY include feature maps that are exactly for this subject
+    // Include feature maps for this subject
     if (fileName === `${code}-feature-map.md` || fileName === `${code}-feature-map.yaml`) {
       return true;
     }
 
-    // ONLY include memory items that were explicitly saved to this subject
-    if (pathLower.startsWith(`imported/quiz_result_${code}`) ||
-        pathLower.startsWith(`imported/progress_state:${code}`)) {
-      return true;
+    // Include memory items or general items that match this subject
+    if (pathLower.startsWith('imported/') || pathLower.includes('assessments/general/')) {
+      const topicStr = String(art.data?.topic || art.data?.topic_id || art.title || '').toLowerCase();
+      if (topicStr.includes(code)) return true;
+
+      if (featureMap && featureMap.features.length > 0) {
+        const cleanTopic = topicStr.replace(/^(circuit quiz:|quiz:|exam:|test:|practice:)\s*/i, '').trim();
+        const topicWords = cleanTopic.split(/[^a-z0-9]+/i).filter(w => w.length > 2);
+        
+        let match = false;
+        featureMap.features.forEach(feat => {
+          const featName = feat.name.toLowerCase();
+          const featId = feat.id.toLowerCase();
+          if (cleanTopic.includes(featName) || featName.includes(cleanTopic) || cleanTopic.includes(featId)) {
+            match = true;
+          } else {
+            const featWords = (featName + ' ' + featId).split(/[^a-z0-9]+/i).filter(w => w.length > 2);
+            if (topicWords.some(tw => featWords.some(fw => fw.includes(tw) || tw.includes(fw)))) {
+              match = true;
+            }
+          }
+        });
+        if (match) return true;
+      }
     }
 
-    // REJECT everything else
     return false;
   });
 

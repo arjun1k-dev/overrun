@@ -47,6 +47,27 @@ export interface DailyTimeBankEntry {
   netMinutes: number;       // positive = gained, negative = lost
 }
 
+export interface TimeBankTransaction {
+  id: string;
+  timestamp: number;        // epoch ms
+  dateKey: string;          // "YYYY-MM-DD"
+  deltaMinutes: number;     // positive = gained, negative = lost
+  reason: string;           // explanation string
+  taskId?: string;
+  type: 'earned' | 'penalty' | 'overtime' | 'skip' | 'manual';
+}
+
+export interface ActiveFocusSession {
+  taskId: string;
+  taskTitle: string;
+  dateKey: string;
+  startTime: number;        // epoch ms
+  plannedMinutes: number;
+  elapsedSeconds: number;
+  isPaused: boolean;
+  type: TaskType;
+}
+
 // ============================================================
 // Memory Base — Long-Term Goals
 // ============================================================

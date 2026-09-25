@@ -4,11 +4,12 @@
 
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { TaskInstance, EODSummary, DayOfWeek, TaskStatus, ParsedTask, MemoryGoal, SubGoal, GoalCategory, GoalStatus, ObsidianVaultConfig, ObsidianNoteSummary } from '@/data/types';
+import type { TaskInstance, EODSummary, DayOfWeek, TaskStatus, ParsedTask, MemoryGoal, SubGoal, GoalCategory, GoalStatus, ObsidianVaultConfig, ObsidianNoteSummary, TimeBankTransaction, ActiveFocusSession } from '@/data/types';
 import { timeToMinutes, getTodayKey, getDayOfWeekFromDate, getDateKey } from '@/data/types';
 import type { SchemaType } from '@/engine/schema-registry';
 
 import { generatePhase1Tasks } from '@/engine/phase1-timeline-seeder';
+import { calculateTaskCompletion, generateSessionStateMarkdown } from '@/engine/time-bank-engine';
 
 interface OverrunState {
   // ---- Task Management ----
@@ -16,9 +17,11 @@ interface OverrunState {
   activeDate: string; // "YYYY-MM-DD"
   seedPhase1Timeline: () => void;
 
-  // ---- Time Bank ----
+  // ---- Time Bank & Active Sessions ----
   timeBank: number;
   dailyTimeBank: Record<string, number>;
+  timeBankLedger: TimeBankTransaction[];
+  activeSession: ActiveFocusSession | null;
 
   // ---- EOD Summaries ----
   eodSummaries: EODSummary[];
@@ -43,12 +46,21 @@ interface OverrunState {
   setActiveDate: (dateKey: string) => void;
   importTasks: (dateKey: string, parsedTasks: ParsedTask[]) => void;
   addTasks: (parsedTasks: ParsedTask[]) => void;
-  markDone: (dateKey: string, taskId: string) => void;
+  markDone: (dateKey: string, taskId: string, customDurationMinutes?: number) => void;
   markOvertime: (dateKey: string, taskId: string, actualEnd: string) => void;
   skipTask: (dateKey: string, taskId: string) => void;
   rescheduleTask: (dateKey: string, taskId: string, newStart: string, newEnd: string) => void;
   clearDayTasks: (dateKey: string) => void;
   saveEODSummary: (dateKey: string, summary: string, taskNames: string[]) => void;
+
+  // Active Focus Session Actions
+  startActiveSession: (taskId: string, dateKey: string) => void;
+  pauseActiveSession: () => void;
+  resumeActiveSession: () => void;
+  tickActiveSession: () => void;
+  stopActiveSession: (status?: 'done' | 'overtime' | 'skipped') => void;
+  addTimeBankTransaction: (tx: TimeBankTransaction) => void;
+  clearTimeBankLedger: () => void;
 
   // Memory Base actions
   addMemoryGoal: (goal: Omit<MemoryGoal, 'id' | 'createdAt' | 'status'>) => void;
@@ -83,6 +95,8 @@ export const useStore = create<OverrunState>()(
       activeDate: getTodayKey(),
       timeBank: 0,
       dailyTimeBank: {},
+      timeBankLedger: [],
+      activeSession: null,
       eodSummaries: [],
       xp: 0,
       streak: 0,
@@ -139,13 +153,13 @@ export const useStore = create<OverrunState>()(
         });
       },
 
-      markDone: (dateKey, taskId) => {
+      markDone: (dateKey, taskId, customDurationMinutes) => {
         const state = get();
         const tasks = state.tasksByDate[dateKey] ?? [];
         const task = tasks.find((t) => t.id === taskId);
         if (!task) return;
 
-        // If task is ALREADY done, toggle it back to pending (unmark)
+        // If task is ALREADY done, toggle back to pending (unmark)
         if (task.status === 'done') {
           set((s) => ({
             tasksByDate: {
@@ -160,18 +174,11 @@ export const useStore = create<OverrunState>()(
           return;
         }
 
-        // If pending, overtime, or skipped, mark as done
+        const plannedDuration = Math.max(1, timeToMinutes(task.end) - timeToMinutes(task.start));
+        const actualDuration = customDurationMinutes ?? plannedDuration;
+
+        const result = calculateTaskCompletion(task, actualDuration, 'done');
         const now = new Date();
-        const currentMinutes = now.getHours() * 60 + now.getMinutes();
-        const plannedEnd = timeToMinutes(task.end);
-
-        let gained = 0;
-        if (currentMinutes < plannedEnd) {
-          gained = plannedEnd - currentMinutes;
-        } else if (currentMinutes > plannedEnd) {
-          gained = plannedEnd - currentMinutes;
-        }
-
         const actualEndStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
 
         set((s) => ({
@@ -183,12 +190,13 @@ export const useStore = create<OverrunState>()(
                 : t
             ),
           },
-          timeBank: Math.max(0, s.timeBank + gained), // Prevent negative time bank
+          timeBank: s.timeBank + result.deltaMinutes, // Allows real negative debt!
           dailyTimeBank: {
             ...s.dailyTimeBank,
-            [dateKey]: (s.dailyTimeBank[dateKey] ?? 0) + gained,
+            [dateKey]: (s.dailyTimeBank[dateKey] ?? 0) + result.deltaMinutes,
           },
-          xp: s.xp + Math.max(10, gained),
+          timeBankLedger: [result.transaction, ...(s.timeBankLedger || [])].slice(0, 50),
+          xp: Math.max(0, s.xp + result.xpDelta),
         }));
 
         get()._updateStreak();
@@ -202,7 +210,10 @@ export const useStore = create<OverrunState>()(
 
         const plannedEnd = timeToMinutes(task.end);
         const actualEndMin = timeToMinutes(actualEnd);
-        const lost = actualEndMin - plannedEnd;
+        const plannedDuration = Math.max(1, plannedEnd - timeToMinutes(task.start));
+        const actualDuration = Math.max(plannedDuration + 1, actualEndMin - timeToMinutes(task.start));
+
+        const result = calculateTaskCompletion(task, actualDuration, 'overtime');
 
         set((s) => ({
           tasksByDate: {
@@ -213,12 +224,13 @@ export const useStore = create<OverrunState>()(
                 : t
             ),
           },
-          timeBank: Math.max(0, s.timeBank - lost), // Prevent negative time bank
+          timeBank: s.timeBank + result.deltaMinutes,
           dailyTimeBank: {
             ...s.dailyTimeBank,
-            [dateKey]: (s.dailyTimeBank[dateKey] ?? 0) - lost,
+            [dateKey]: (s.dailyTimeBank[dateKey] ?? 0) + result.deltaMinutes,
           },
-          xp: Math.max(0, s.xp - 5),
+          timeBankLedger: [result.transaction, ...(s.timeBankLedger || [])].slice(0, 50),
+          xp: Math.max(0, s.xp + result.xpDelta),
         }));
 
         get()._updateStreak();
@@ -232,18 +244,107 @@ export const useStore = create<OverrunState>()(
 
         const isSkipped = task.status === 'skipped';
 
+        if (isSkipped) {
+          set((s) => ({
+            tasksByDate: {
+              ...s.tasksByDate,
+              [dateKey]: (s.tasksByDate[dateKey] ?? []).map((t) =>
+                t.id === taskId ? { ...t, status: 'pending' as TaskStatus } : t
+              ),
+            },
+          }));
+          return;
+        }
+
+        const result = calculateTaskCompletion(task, 0, 'skipped');
+
         set((s) => ({
           tasksByDate: {
             ...s.tasksByDate,
             [dateKey]: (s.tasksByDate[dateKey] ?? []).map((t) =>
-              t.id === taskId
-                ? { ...t, status: (isSkipped ? 'pending' : 'skipped') as TaskStatus }
-                : t
+              t.id === taskId ? { ...t, status: 'skipped' as TaskStatus } : t
             ),
           },
-          xp: isSkipped ? s.xp : Math.max(0, s.xp - 15),
+          timeBank: s.timeBank + result.deltaMinutes,
+          dailyTimeBank: {
+            ...s.dailyTimeBank,
+            [dateKey]: (s.dailyTimeBank[dateKey] ?? 0) + result.deltaMinutes,
+          },
+          timeBankLedger: [result.transaction, ...(s.timeBankLedger || [])].slice(0, 50),
+          xp: Math.max(0, s.xp + result.xpDelta),
         }));
       },
+
+      // Active Focus Session Implementation
+      startActiveSession: (taskId, dateKey) => {
+        const state = get();
+        const tasks = state.tasksByDate[dateKey] ?? [];
+        const task = tasks.find((t) => t.id === taskId);
+        if (!task) return;
+
+        const plannedMinutes = Math.max(1, timeToMinutes(task.end) - timeToMinutes(task.start));
+
+        set({
+          activeSession: {
+            taskId: task.id,
+            taskTitle: task.task,
+            dateKey,
+            startTime: Date.now(),
+            plannedMinutes,
+            elapsedSeconds: 0,
+            isPaused: false,
+            type: task.type,
+          },
+        });
+      },
+
+      pauseActiveSession: () => {
+        set((s) => (s.activeSession ? { activeSession: { ...s.activeSession, isPaused: true } } : {}));
+      },
+
+      resumeActiveSession: () => {
+        set((s) => (s.activeSession ? { activeSession: { ...s.activeSession, isPaused: false } } : {}));
+      },
+
+      tickActiveSession: () => {
+        set((s) => {
+          if (!s.activeSession || s.activeSession.isPaused) return {};
+          return {
+            activeSession: {
+              ...s.activeSession,
+              elapsedSeconds: s.activeSession.elapsedSeconds + 1,
+            },
+          };
+        });
+      },
+
+      stopActiveSession: (status = 'done') => {
+        const state = get();
+        const session = state.activeSession;
+        if (!session) return;
+
+        const actualMinutes = Math.max(1, Math.round(session.elapsedSeconds / 60));
+        set({ activeSession: null });
+
+        if (status === 'done') {
+          get().markDone(session.dateKey, session.taskId, actualMinutes);
+        } else if (status === 'overtime') {
+          const now = new Date();
+          const actualEnd = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+          get().markOvertime(session.dateKey, session.taskId, actualEnd);
+        } else if (status === 'skipped') {
+          get().skipTask(session.dateKey, session.taskId);
+        }
+      },
+
+      addTimeBankTransaction: (tx) => {
+        set((s) => ({
+          timeBank: s.timeBank + tx.deltaMinutes,
+          timeBankLedger: [tx, ...(s.timeBankLedger || [])].slice(0, 50),
+        }));
+      },
+
+      clearTimeBankLedger: () => set({ timeBankLedger: [] }),
 
       rescheduleTask: (dateKey, taskId, newStart, newEnd) => {
         set((s) => ({
@@ -454,6 +555,7 @@ export const useStore = create<OverrunState>()(
         tasksByDate: state.tasksByDate,
         timeBank: state.timeBank,
         dailyTimeBank: state.dailyTimeBank,
+        timeBankLedger: state.timeBankLedger,
         eodSummaries: state.eodSummaries,
         xp: state.xp,
         streak: state.streak,
